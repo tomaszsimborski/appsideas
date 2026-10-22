@@ -20,6 +20,30 @@ const cases = [];
 for (const [name, pattern] of Object.entries(PATTERNS)) {
   for (const bpm of [80, 95, 110, 130]) cases.push({ name, pattern, bpm, bars: 2 });
 }
+// "tu" = kick, "ta" = snare, "ts" = hi-hat
+for (const [name, pattern] of Object.entries(PATTERNS)) {
+  for (const bpm of [85, 120]) cases.push({ name: name + '/tuta', pattern, bpm, bars: 2, sounds: 'tuta' });
+}
+// Recorded with a metronome that leaks into the mic, a 1-bar count-in and an
+// imperfect latency estimate. Steps must match bar positions exactly, even
+// when the pattern does not start on beat 1.
+const CLICK_FREQS = [2400, 1800];
+const offbeat = P('2:h 4:s 6:h 8:k 10:k 12:s 14:h');
+for (const [latency, bpm, pattern, name] of [
+  [0.04, 100, PATTERNS.basic, 'basic'],
+  [-0.03, 90, offbeat, 'offbeat'],
+  [0.06, 120, PATTERNS.sixteenthHats, 'sixteenthHats'],
+  [0.02, 85, offbeat, 'offbeat'],
+  // Unaccounted output latency (e.g. Bluetooth headphones): hits land ~200 ms after the clicks
+  [-0.2, 100, PATTERNS.basic, 'basic/bt'],
+  [-0.18, 90, offbeat, 'offbeat/bt'],
+  [-0.15, 120, PATTERNS.boomBap, 'boomBap/bt'],
+  // Came in one bar late after the count-in: the empty bar is skipped
+  [0.03 - 2.4, 100, PATTERNS.basic, 'basic/late'],
+]) {
+  cases.push({ name: name + '/metro', pattern, bpm, bars: 2, sounds: 'tuta', lead: 3,
+    clicks: { amp: 0.15, freqs: CLICK_FREQS, countIn: 4 }, metronome: { latency } });
+}
 // Sloppier / noisier takes
 cases.push({ name: 'basic', pattern: PATTERNS.basic, bpm: 100, bars: 4, jitterMs: 20, noiseDb: -40 });
 cases.push({ name: 'boomBap', pattern: PATTERNS.boomBap, bpm: 90, bars: 4, jitterMs: 20, noiseDb: -40, sr: 44100 });
@@ -27,9 +51,11 @@ cases.push({ name: 'sixteenthHats', pattern: PATTERNS.sixteenthHats, bpm: 120, b
 
 for (const c of cases) {
   const { samples, sr, truth } = render(Object.assign({ seed: c.bpm }, c));
-  const hits = A.analyse(samples, sr, { sensitivity: 6 });
-  const bpm = A.estimateTempo(hits);
-  const grid = A.makeGrid(hits, bpm || 100);
+  const metro = c.metronome;
+  const hits = A.analyse(samples, sr, { sensitivity: 6, clickFreqs: metro ? CLICK_FREQS : null });
+  const bpm = metro ? c.bpm : A.estimateTempo(hits);
+  // With a metronome, the app knows (roughly) where bar 1 starts.
+  const grid = A.makeGrid(hits, bpm || 100, metro ? (c.lead || 0.6) + metro.latency : undefined);
 
   // Match detected hits to truth (within 40 ms)
   let matched = 0, correctLabel = 0;
@@ -48,9 +74,9 @@ for (const c of cases) {
   }
   // Quantised steps should equal the true steps (relative to the first hit)
   let stepOk = 0;
-  const t0 = truth[0].step;
+  const t0 = metro ? 0 : truth[0].step;
   const sortedHits = hits.slice().sort((a, b) => a.time - b.time);
-  const h0 = grid.stepOf(sortedHits[0].time);
+  const h0 = metro ? 0 : grid.stepOf(sortedHits[0].time);
   for (const t of truth) {
     const h = hits.find((x) => Math.abs(x.time - t.time) < 0.04);
     if (h && grid.stepOf(h.time) - h0 === t.step - t0) stepOk++;

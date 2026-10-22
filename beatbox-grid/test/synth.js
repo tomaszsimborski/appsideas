@@ -72,9 +72,39 @@ const SOUNDS = {
   },
 };
 
+// "tu" / "ta" / "ts": all three start with the same alveolar "t" burst.
+function tBurst(out, s, sr, r) {
+  noise(out, s, sr, 'hp', 3500, 0.7, 0.012, 0.9, r, 0.001);
+}
+const SOUNDS_TU_TA = {
+  kick(out, s, sr, r) {
+    tBurst(out, s, sr, r);
+    voiced(out, s + Math.floor(0.01 * sr), sr, 110 + 20 * r(), [[300, 4], [800, 6], [2300, 10]], 0.15, 0.8, r);
+  },
+  snare(out, s, sr, r) {
+    tBurst(out, s, sr, r);
+    voiced(out, s + Math.floor(0.01 * sr), sr, 130 + 20 * r(), [[750, 5], [1250, 6], [2600, 8]], 0.12, 0.7, r);
+  },
+  hihat(out, s, sr, r) {
+    tBurst(out, s, sr, r);
+    noise(out, s + Math.floor(0.008 * sr), sr, 'hp', 6000, 0.7, 0.07, 0.8, r, 0.004);
+  },
+};
+
+// Metronome click as heard through a speaker and picked up by the mic.
+function click(out, s, sr, freq, amp) {
+  const n = Math.floor(0.03 * sr);
+  for (let i = 0; i < n && s + i < out.length; i++) {
+    const t = i / sr;
+    out[s + i] += amp * Math.sin(2 * Math.PI * freq * t) * Math.min(1, t / 0.001) * Math.exp(-t / 0.008);
+  }
+}
+
 // pattern: array of {step, drum}; steps are 16th notes
-function render({ bpm, pattern, bars = 1, sr = 48000, jitterMs = 12, lead = 0.6, seed = 1, noiseDb = -55 }) {
+function render({ bpm, pattern, bars = 1, sr = 48000, jitterMs = 12, lead = 0.6, seed = 1, noiseDb = -55,
+  sounds = 'boomka', clicks = null }) {
   const r = rng(seed);
+  const set = sounds === 'tuta' ? SOUNDS_TU_TA : SOUNDS;
   const s = 15 / bpm;
   const dur = lead + bars * 16 * s + 1;
   const out = new Float32Array(Math.ceil(dur * sr));
@@ -85,9 +115,18 @@ function render({ bpm, pattern, bars = 1, sr = 48000, jitterMs = 12, lead = 0.6,
       const amp = 0.6 + 0.4 * r();
       const start = Math.floor(t * sr);
       const tmp = new Float32Array(Math.floor(0.4 * sr));
-      SOUNDS[drum](tmp, 0, sr, r);
+      set[drum](tmp, 0, sr, r);
       for (let i = 0; i < tmp.length && start + i < out.length; i++) out[start + i] += amp * tmp[i] * 0.3;
       truth.push({ time: t, drum, step: b * 16 + step });
+    }
+  }
+  // clicks: { amp, freqs: [accent, normal], countIn } - metronome leaking into the mic,
+  // one per beat from `lead - countIn beats` to the end.
+  if (clicks) {
+    const beat = 4 * s;
+    for (let k = -(clicks.countIn || 0); lead + k * beat < dur - 0.1; k++) {
+      const t = lead + k * beat;
+      if (t >= 0) click(out, Math.floor(t * sr), sr, clicks.freqs[((k % 4) + 4) % 4 === 0 ? 0 : 1], clicks.amp);
     }
   }
   const na = Math.pow(10, noiseDb / 20);
