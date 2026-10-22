@@ -7,6 +7,11 @@
   const COLORS = { hihat: '#f5c84b', snare: '#4fd1c5', kick: '#ff7a59' };
   const STEPS_PER_BAR = 16;
   const MAX_RECORD_SEC = 120;
+  const COUNT_IN_BEATS = 4;
+  // Metronome clicks are pure sine tones so the analysis can tell them apart
+  // from vocal hits if they leak into the mic. [accent (beat 1), other beats]
+  const CLICK_FREQS = [2400, 1800];
+  const PRE_ROLL_SEC = 0.3; // audio kept before bar 1 when the count-in is cut off
   const $ = (id) => document.getElementById(id);
   const mod = (n, m) => ((n % m) + m) % m;
 
@@ -18,6 +23,7 @@
     bpm: 100,
     shift: 0,          // user rotation of the pattern, in steps
     grid: null,        // { stepSec, origin, totalSteps, bars, cells: { drum: Map(step -> [hitIndex]) } }
+    take: null,        // { anchor, clickFreqs }: anchor = time of a metronome downbeat in the recording
   };
 
   /* ---------- Audio context & output ---------- */
@@ -90,6 +96,43 @@
     },
   };
 
+  function metronomeClick(t, accent) {
+    const osc = ac.createOscillator();
+    osc.frequency.value = CLICK_FREQS[accent ? 0 : 1];
+    const g = ac.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(accent ? 0.5 : 0.3, t + 0.003);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+    osc.connect(g);
+    g.connect(ac.destination);
+    osc.start(t);
+    osc.stop(t + 0.06);
+  }
+
+  /* ---------- Settings (remembered in this browser) ---------- */
+
+  const SETTINGS_KEY = 'beatbox-grid-settings';
+
+  function loadSettings() {
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(SETTINGS_KEY)); } catch (e) { /* storage unavailable */ }
+    if (!saved) return;
+    if (saved.bpm >= 40 && saved.bpm <= 300) { state.bpm = saved.bpm; $('bpm').value = saved.bpm; }
+    for (const id of ['metronome', 'countIn', 'autoTempo']) if (typeof saved[id] === 'boolean') $(id).checked = saved[id];
+  }
+
+  function saveSettings() {
+    const s = { bpm: state.bpm };
+    for (const id of ['metronome', 'countIn', 'autoTempo']) s[id] = $(id).checked;
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); } catch (e) { /* storage unavailable */ }
+  }
+
+  function syncTempoOptions() {
+    const auto = $('autoTempo').checked;
+    $('metronome').disabled = auto;
+    $('countIn').disabled = auto;
+  }
+
   /* ---------- Status helpers ---------- */
 
   function setStatus(msg, isError) {
@@ -131,10 +174,25 @@
     const proc = ctx.createScriptProcessor(2048, 1, 1);
     const mute = ctx.createGain();
     mute.gain.value = 0;
-    rec = { stream, src, proc, mute, chunks: [], peaks: [], level: 0, startedAt: ctx.currentTime, length: 0 };
+    const auto = $('autoTempo').checked;
+    const beatSec = 60 / state.bpm;
+    const countIn = !auto && $('countIn').checked ? COUNT_IN_BEATS : 0;
+    const metronome = !auto && $('metronome').checked;
+    const firstBeat = ctx.currentTime + 0.3;
+    rec = {
+      stream, src, proc, mute, chunks: [], peaks: [], level: 0, length: 0,
+      startCtx: null,  // context time of the first recorded sample
+      beatSec, countIn, metronome, firstBeat, nextBeat: 0, clickTimer: null, clicked: false,
+      downbeatCtx: countIn || metronome ? firstBeat + countIn * beatSec : null,
+    };
+    if (countIn || metronome) {
+      scheduleClicks();
+      rec.clickTimer = setInterval(scheduleClicks, 25);
+    }
     proc.onaudioprocess = (e) => {
       if (!rec) return;
       const data = e.inputBuffer.getChannelData(0);
+      if (rec.startCtx === null) rec.startCtx = ctx.currentTime - data.length / ctx.sampleRate;
       rec.chunks.push(new Float32Array(data));
       rec.length += data.length;
       for (let i = 0; i < data.length; i += 512) {
@@ -152,8 +210,31 @@
     $('recordBtn').classList.add('active');
     $('recordBtn').querySelector('.label').textContent = 'Stop';
     $('playRecBtn').disabled = true;
-    setStatus('Recording… beatbox now, then press Stop.');
+    $('playPatBtn').disabled = true;
+    setStatus(countIn ? 'Count-in…' : 'Recording… beatbox now, then press Stop.');
     requestAnimationFrame(recordingLoop);
+  }
+
+  function scheduleClicks() {
+    if (!rec) return;
+    while (true) {
+      const k = rec.nextBeat;
+      if (k >= rec.countIn && !rec.metronome) break;
+      const t = rec.firstBeat + k * rec.beatSec;
+      if (t > ac.currentTime + 0.12) break;
+      metronomeClick(t, k % 4 === 0);
+      if (k >= rec.countIn) rec.clicked = true;
+      rec.nextBeat++;
+    }
+  }
+
+  function showBeat(beat, counting) {
+    const leds = $('beatLeds');
+    leds.classList.toggle('count', !!counting);
+    leds.querySelectorAll('i').forEach((led, i) => {
+      led.classList.toggle('on', i === beat);
+      led.classList.toggle('accent', i === beat && beat === 0 && !counting);
+    });
   }
 
   function recordingLoop() {
@@ -161,7 +242,17 @@
     const sec = rec.length / ac.sampleRate;
     $('recTime').textContent = fmtTime(sec);
     $('meterFill').style.width = `${Math.min(100, Math.sqrt(rec.level) * 100)}%`;
-    drawLiveWave(rec.peaks);
+    let countText = null;
+    if (rec.countIn || rec.metronome) {
+      const k = Math.floor((ac.currentTime - rec.firstBeat) / rec.beatSec);
+      const counting = k < rec.countIn;
+      if (k >= 0 && (counting || rec.metronome)) showBeat(k % 4, counting);
+      else showBeat(-1);
+      if (counting && k >= 0) countText = String(k + 1);
+      if (counting && k >= 0) setStatus(`Count-in… ${k + 1}`);
+      else if (rec.countIn && k === rec.countIn) setStatus('Recording… beatbox now, then press Stop.');
+    }
+    drawLiveWave(rec.peaks, countText);
     requestAnimationFrame(recordingLoop);
   }
 
@@ -169,6 +260,9 @@
     if (!rec) return;
     const r = rec;
     rec = null;
+    clearInterval(r.clickTimer);
+    showBeat(-1);
+    $('playPatBtn').disabled = false;
     r.proc.onaudioprocess = null;
     r.src.disconnect();
     r.proc.disconnect();
@@ -183,11 +277,29 @@
       drawWave();
       return;
     }
-    const buf = ac.createBuffer(1, r.length, ac.sampleRate);
-    const out = buf.getChannelData(0);
+    const all = new Float32Array(r.length);
     let off = 0;
-    for (const c of r.chunks) { out.set(c, off); off += c.length; }
-    loadBuffer(buf);
+    for (const c of r.chunks) { all.set(c, off); off += c.length; }
+
+    // Where the metronome's bar 1 falls in the recording. Hits arrive late by
+    // the output + input latency; the grid fine-tunes the rest from the hits.
+    let anchor = null;
+    let trim = 0;
+    if (r.downbeatCtx !== null && r.startCtx !== null) {
+      const latency = (ac.outputLatency || 0) + (ac.baseLatency || 0);
+      anchor = r.downbeatCtx - r.startCtx + latency;
+      if (r.countIn) trim = Math.max(0, Math.floor((anchor - PRE_ROLL_SEC) * ac.sampleRate));
+      anchor -= trim / ac.sampleRate;
+    }
+    const kept = all.subarray(Math.min(trim, all.length));
+    if (kept.length < ac.sampleRate * 0.3) {
+      setStatus('Nothing was recorded after the count-in — try again.', true);
+      drawWave();
+      return;
+    }
+    const buf = ac.createBuffer(1, kept.length, ac.sampleRate);
+    buf.copyToChannel(kept, 0);
+    loadBuffer(buf, { anchor, clickFreqs: r.clicked || r.countIn ? CLICK_FREQS : null });
   }
 
   async function loadFile(file) {
@@ -204,8 +316,9 @@
     }
   }
 
-  function loadBuffer(buf) {
+  function loadBuffer(buf, take) {
     state.buffer = buf;
+    state.take = take || { anchor: null, clickFreqs: null };
     const n = buf.length;
     const mono = new Float32Array(n);
     for (let c = 0; c < buf.numberOfChannels; c++) {
@@ -228,7 +341,7 @@
     setTimeout(() => {
       const t0 = performance.now();
       const sensitivity = +$('sensitivity').value;
-      const hits = A.analyse(state.samples, state.buffer.sampleRate, { sensitivity });
+      const hits = A.analyse(state.samples, state.buffer.sampleRate, { sensitivity, clickFreqs: state.take.clickFreqs });
       state.hits = hits.map((h) => ({
         time: h.time,
         label: h.label,
@@ -237,15 +350,24 @@
         deleted: false,
         manual: false,
       }));
-      state.detectedBpm = A.estimateTempo(hits);
-      state.bpm = state.detectedBpm || 100;
       state.shift = 0;
-      $('bpm').value = state.bpm;
+      detectTempoIfAuto();
       rebuildGrid();
       const ms = Math.round(performance.now() - t0);
       if (!hits.length) setStatus('No hits found — try beatboxing louder or raise the sensitivity.', true);
       else setStatus(`Found ${hits.length} hits in ${ms} ms.`);
     }, 20);
+  }
+
+  function detectTempoIfAuto() {
+    state.detectedBpm = null;
+    if (!$('autoTempo').checked || !state.hits.length) return;
+    state.detectedBpm = A.estimateTempo(state.hits.filter((h) => !h.manual).map((h) => ({ time: h.time, label: h.autoLabel })));
+    if (state.detectedBpm) {
+      state.bpm = state.detectedBpm;
+      $('bpm').value = state.bpm;
+      saveSettings();
+    }
   }
 
   /* ---------- Grid model ---------- */
@@ -254,7 +376,7 @@
     // Grid phase and bar alignment come from the detected hits and their
     // original labels only, so editing cells never moves the grid.
     const detected = state.hits.filter((h) => !h.manual).map((h) => ({ time: h.time, label: h.autoLabel }));
-    const g = A.makeGrid(detected, state.bpm);
+    const g = A.makeGrid(detected, state.bpm, state.take && state.take.anchor);
     let maxStep = 0;
     for (const h of state.hits) {
       h.rawStep = Math.max(0, g.stepOf(h.time));
@@ -311,6 +433,7 @@
     v = Math.min(300, Math.max(40, Math.round(v * 10) / 10));
     state.bpm = v;
     if (updateField) $('bpm').value = v;
+    saveSettings();
     rebuildGrid();
   }
 
@@ -499,9 +622,17 @@
     }
   }
 
-  function drawLiveWave(peaks) {
-    const { ctx, w, h } = canvasSize();
+  function drawLiveWave(peaks, countText) {
+    const { ctx, w, h, dpr } = canvasSize();
     ctx.clearRect(0, 0, w, h);
+    if (countText) {
+      ctx.fillStyle = '#f5c84b';
+      ctx.font = `700 ${Math.round(h * 0.7)}px system-ui, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(countText, w / 2, h / 2 + 2 * dpr);
+      ctx.textBaseline = 'alphabetic';
+    }
     const span = Math.max(10 * ac.sampleRate / 512, peaks.length);
     ctx.fillStyle = '#ff4d5e';
     const mid = h / 2;
@@ -555,6 +686,7 @@
   const player = { playing: false, timer: null, step: 0, nextTime: 0, queue: [], current: -1, rec: null };
 
   function startPattern() {
+    if (rec) return;
     stopRecPlayback();
     const ctx = audio();
     ctx.resume();
@@ -657,7 +789,13 @@
   });
   $('halfBtn').addEventListener('click', () => setBpm(state.bpm / 2, true));
   $('doubleBtn').addEventListener('click', () => setBpm(state.bpm * 2, true));
-  $('autoBpmBtn').addEventListener('click', () => setBpm(state.detectedBpm || 100, true));
+  $('metronome').addEventListener('change', saveSettings);
+  $('countIn').addEventListener('change', saveSettings);
+  $('autoTempo').addEventListener('change', () => {
+    syncTempoOptions();
+    saveSettings();
+    if ($('autoTempo').checked && state.samples) { detectTempoIfAuto(); rebuildGrid(); }
+  });
   $('shiftLeft').addEventListener('click', () => { state.shift--; rebuildGrid(); });
   $('shiftRight').addEventListener('click', () => { state.shift++; rebuildGrid(); });
   $('resetBtn').addEventListener('click', resetEdits);
@@ -683,6 +821,8 @@
     resizeTimer = setTimeout(() => { computeWavePeaks(); drawWave(); }, 100);
   });
 
+  loadSettings();
+  syncTempoOptions();
   // Start with an empty one-bar grid so it can be used as a plain step sequencer too.
   $('playPatBtn').disabled = false;
   rebuildGrid();

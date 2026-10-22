@@ -9,7 +9,7 @@
 <body>
   <header class="top">
     <h1>Beatbox <span>→</span> Drum Grid</h1>
-    <p class="hint">Record yourself beatboxing: <b>“boom”</b> = kick, <b>“ka / pam”</b> = snare, <b>“ts”</b> = hi-hat.</p>
+    <p class="hint">Record yourself beatboxing: <b>“tu”</b> = kick, <b>“ta”</b> = snare, <b>“ts”</b> = hi-hat.</p>
   </header>
 
   <main>
@@ -20,6 +20,19 @@
         <label class="btn file">Load audio file…<input id="fileInput" type="file" accept="audio/*" hidden></label>
         <div class="meter" title="Input level"><div id="meterFill"></div></div>
         <span id="recTime" class="mono">0:00.0</span>
+      </div>
+      <div class="row">
+        <label class="field">Tempo
+          <input id="bpm" type="number" min="40" max="300" step="1" value="100">
+          <span>BPM</span>
+        </label>
+        <button id="halfBtn" class="btn small-btn" title="Halve tempo">÷2</button>
+        <button id="doubleBtn" class="btn small-btn" title="Double tempo">×2</button>
+        <span class="sep"></span>
+        <label class="small check"><input id="metronome" type="checkbox" checked> Metronome</label>
+        <label class="small check"><input id="countIn" type="checkbox" checked> Count-in (1 bar)</label>
+        <label class="small check"><input id="autoTempo" type="checkbox"> Detect tempo from recording</label>
+        <div id="beatLeds" class="beat-leds" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
       </div>
       <canvas id="wave" height="110"></canvas>
       <div class="row small">
@@ -33,18 +46,11 @@
     <section class="panel">
       <div class="row">
         <button id="playPatBtn" class="btn primary" disabled>▶ Play pattern</button>
-        <label class="field">BPM
-          <input id="bpm" type="number" min="40" max="300" step="1" value="100">
-        </label>
-        <button id="halfBtn" class="btn small-btn" title="Halve tempo">÷2</button>
-        <button id="doubleBtn" class="btn small-btn" title="Double tempo">×2</button>
-        <button id="autoBpmBtn" class="btn small-btn" title="Use the detected tempo">Auto</button>
-        <span class="sep"></span>
         <span class="small">Shift</span>
         <button id="shiftLeft" class="btn small-btn" title="Move all hits one step earlier">◀</button>
         <button id="shiftRight" class="btn small-btn" title="Move all hits one step later">▶</button>
         <button id="resetBtn" class="btn small-btn" title="Undo your edits and re-use the detected labels">Reset edits</button>
-        <label class="small check"><input id="withRec" type="checkbox"> play recording along</label>
+        <label class="small check push"><input id="withRec" type="checkbox"> play recording along</label>
       </div>
       <div id="gridWrap" class="grid-wrap">
         <div id="grid" class="grid"></div>

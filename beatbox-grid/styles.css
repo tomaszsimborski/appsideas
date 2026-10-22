@@ -48,7 +48,16 @@ main { padding: 12px 24px 32px; display: grid; gap: 16px; max-width: 1400px; }
 .muted { color: var(--muted); margin: 0; }
 .mono { font-variant-numeric: tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
 .sep { width: 1px; height: 22px; background: var(--line); margin: 0 4px; }
-.check { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; cursor: pointer; }
+.check { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.check input { accent-color: var(--accent); }
+.check:has(input:disabled) { opacity: .45; cursor: default; }
+.push { margin-left: auto; }
+
+.beat-leds { display: inline-flex; gap: 6px; margin-left: auto; }
+.beat-leds i { width: 14px; height: 14px; border-radius: 50%; background: var(--panel-2); border: 1px solid var(--line); transition: background 40ms; }
+.beat-leds i.on { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 8px var(--accent); }
+.beat-leds i.on.accent { background: #fff; border-color: #fff; box-shadow: 0 0 8px #fff; }
+.beat-leds.count i.on { background: var(--hihat); border-color: var(--hihat); box-shadow: 0 0 8px var(--hihat); }
 
 .btn {
   appearance: none;
@@ -177,5 +186,5 @@ input[type=range] { accent-color: var(--accent); width: 140px; }
   :root { --cell-size: 26px; --label-w: 74px; }
   .row-label { padding: 0 8px 0 10px; font-size: 12px; gap: 6px; }
   .top, main { padding-left: 12px; padding-right: 12px; }
-  .status, .check { margin-left: 0; }
+  .status, .push, .beat-leds { margin-left: 0; }
 }

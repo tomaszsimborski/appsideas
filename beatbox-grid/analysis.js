@@ -17,7 +17,10 @@
     peakHalfWidth: 3,         // frames each side a peak must dominate
     minGapSec: 0.07,          // minimum time between two hits
     gateDb: 38,               // hits quieter than loudest - gateDb are ignored
-    featureWindowSec: 0.05,   // audio after each onset used for classification
+    // Classification looks at the "body" of each sound, skipping the initial
+    // consonant ("t" in "tu" / "ta" / "ts") which sounds the same for all three.
+    bodyStartSec: 0.012,
+    bodyEndSec: 0.08,
     lowBand: [40, 300],
     midBand: [300, 4000],
     highBand: [4000, 16000],
@@ -123,7 +126,10 @@
   }
 
   // sensitivity: 1 (only the clearest hits) .. 10 (everything)
-  function detectOnsets(spec, sensitivity, cfg) {
+  // ignoreBins: spectrum bins left out of the flux (metronome tones).
+  // reject(peaks): optional filter applied to the raw peaks before nearby
+  // peaks are merged, so a dropped click can't swallow a hit next to it.
+  function detectOnsets(spec, sensitivity, cfg, ignoreBins, reject) {
     const { mags, rms, nFrames, binHz, hop, sampleRate } = spec;
     const kLo = Math.max(1, Math.floor(cfg.minFreq / binHz));
     const kHi = Math.min(spec.nBins - 1, Math.ceil(cfg.maxFreq / binHz));
@@ -132,7 +138,7 @@
     let prev = null;
     for (let t = 0; t < nFrames; t++) {
       const cur = new Float32Array(kHi - kLo + 1);
-      for (let k = kLo; k <= kHi; k++) cur[k - kLo] = Math.log1p(100 * mags[t][k]);
+      for (let k = kLo; k <= kHi; k++) cur[k - kLo] = ignoreBins && ignoreBins[k] ? 0 : Math.log1p(100 * mags[t][k]);
       if (prev) {
         let f = 0;
         for (let i = 0; i < cur.length; i++) {
@@ -159,7 +165,7 @@
     const m = cfg.peakHalfWidth;
     const gapFrames = Math.round((cfg.minGapSec * sampleRate) / hop);
 
-    const onsets = [];
+    let peaks = [];
     for (let t = 1; t < nFrames; t++) {
       const thr = median(flux.subarray(Math.max(0, t - w), Math.min(nFrames, t + w + 1))) + delta;
       if (flux[t] < thr) continue;
@@ -171,13 +177,18 @@
       let loud = 0;
       for (let j = t; j < Math.min(nFrames, t + 4); j++) loud = Math.max(loud, rms[j]);
       if (loud < gate) continue;
+      peaks.push({ frame: t, strength: flux[t] });
+    }
+    if (reject) peaks = reject(peaks);
 
+    const onsets = [];
+    for (const p of peaks) {
       const last = onsets[onsets.length - 1];
-      if (last && t - last.frame < gapFrames) {
-        if (flux[t] > last.strength) { last.frame = t; last.strength = flux[t]; }
+      if (last && p.frame - last.frame < gapFrames) {
+        if (p.strength > last.strength) { last.frame = p.frame; last.strength = p.strength; }
         continue;
       }
-      onsets.push({ frame: t, strength: flux[t] });
+      onsets.push({ frame: p.frame, strength: p.strength });
     }
 
     // Onset sits roughly a third of the way into the frame where flux peaks.
@@ -210,7 +221,7 @@
     return floor;
   }
 
-  function extractFeatures(spec, frame, endFrame, cfg, floor) {
+  function extractFeatures(spec, frame, endFrame, cfg, floor, ignoreBins) {
     const { mags, binHz, nBins } = spec;
     const power = new Float64Array(nBins);
     const nf = endFrame - frame + 1;
@@ -219,6 +230,7 @@
       for (let k = 0; k < nBins; k++) power[k] += m[k] * m[k];
     }
     if (floor) for (let k = 0; k < nBins; k++) power[k] = Math.max(0, power[k] - 2 * nf * floor[k]);
+    if (ignoreBins) for (let k = 0; k < nBins; k++) if (ignoreBins[k]) power[k] = 0;
     const kLo = Math.max(1, Math.floor(cfg.minFreq / binHz));
     const kHi = Math.min(nBins - 1, Math.ceil(cfg.maxFreq / binHz));
     let num = 0, den = 0;
@@ -284,19 +296,72 @@
     return labels;
   }
 
+  /* ---------- Metronome bleed ---------- */
+
+  // Bins within +-100 Hz of each metronome click tone (the clicks are pure sines).
+  function clickBinMask(spec, freqs) {
+    if (!freqs || !freqs.length) return null;
+    const mask = new Uint8Array(spec.nBins);
+    for (const f of freqs) {
+      const k0 = Math.max(0, Math.floor((f - 100) / spec.binHz));
+      const k1 = Math.min(spec.nBins - 1, Math.ceil((f + 100) / spec.binHz));
+      for (let k = k0; k <= k1; k++) mask[k] = 1;
+    }
+    return mask;
+  }
+
+  // Energy of an onset inside / outside the click bins.
+  function clickEnergy(spec, frame, mask, cfg) {
+    let inside = 0, outside = 0;
+    const kLo = Math.max(1, Math.floor(cfg.minFreq / spec.binHz));
+    const kHi = Math.min(spec.nBins - 1, Math.ceil(cfg.maxFreq / spec.binHz));
+    for (let t = frame; t <= Math.min(spec.nFrames - 1, frame + 3); t++) {
+      const m = spec.mags[t];
+      for (let k = kLo; k <= kHi; k++) {
+        if (mask[k]) inside += m[k] * m[k];
+        else outside += m[k] * m[k];
+      }
+    }
+    return { inside, outside };
+  }
+
+  // Removes onsets that are just the metronome leaking into the mic. Every
+  // leaked click spreads the same small fraction of its energy outside its
+  // tone, so pure clicks share one (minimal) outside/inside ratio; a vocal hit,
+  // even one on top of a click, raises that ratio a lot.
+  function dropClicks(spec, onsets, mask, cfg) {
+    const e = onsets.map((o) => clickEnergy(spec, o.frame, mask, cfg));
+    const share = e.map((x) => x.inside / (x.inside + x.outside || 1));
+    const ratio = e.map((x) => x.outside / (x.inside || 1e-12));
+    // Only near-pure tone peaks can be clicks; no vocal sound puts 85 % of its
+    // energy into two narrow bands. Among those, keep any that carry clearly
+    // more non-click energy than the purest one (a hit on top of a click).
+    const isTone = share.map((x) => x > 0.85);
+    const tones = ratio.filter((r, i) => isTone[i]);
+    if (!tones.length) return onsets; // no audible bleed (e.g. headphones)
+    const pure = Math.min(...tones);
+    return onsets.filter((o, i) => !(isTone[i] && ratio[i] < 1.6 * pure));
+  }
+
   /* ---------- Full analysis ---------- */
 
   function analyse(samples, sampleRate, options) {
     const cfg = Object.assign({}, CONFIG, options && options.config);
     const sensitivity = (options && options.sensitivity) || 6;
     const spec = spectrogram(samples, sampleRate, cfg);
-    const { onsets } = detectOnsets(spec, sensitivity, cfg);
-    const winFrames = Math.max(2, Math.round((cfg.featureWindowSec * sampleRate) / cfg.hopSize));
+    const clickMask = clickBinMask(spec, options && options.clickFreqs);
+    const { onsets } = detectOnsets(spec, sensitivity, cfg, clickMask,
+      clickMask ? (peaks) => dropClicks(spec, peaks, clickMask, cfg) : null);
     const floor = noiseFloor(spec);
+    const N = cfg.frameSize, hop = cfg.hopSize;
+    // First frame whose window starts at/after `sec`, and last frame whose window ends by `sec`.
+    const frameFrom = (sec) => Math.ceil((sec * sampleRate) / hop);
+    const frameUntil = (sec) => Math.floor((sec * sampleRate - N) / hop);
     const features = onsets.map((o, i) => {
-      const next = onsets[i + 1] ? onsets[i + 1].frame - 1 : Infinity;
-      const end = Math.min(spec.nFrames - 1, o.frame + winFrames, Math.max(o.frame + 1, next));
-      return extractFeatures(spec, o.frame, end, cfg, floor);
+      const next = onsets[i + 1] ? onsets[i + 1].time : Infinity;
+      const start = Math.min(spec.nFrames - 1, frameFrom(o.time + cfg.bodyStartSec));
+      const end = Math.min(spec.nFrames - 1, frameUntil(Math.min(o.time + cfg.bodyEndSec + N / sampleRate, next)));
+      return extractFeatures(spec, start, Math.max(start, end), cfg, floor, clickMask);
     });
     const labels = classifyAll(features, cfg);
     return onsets.map((o, i) => ({
@@ -379,13 +444,18 @@
   /* ---------- Quantisation ---------- */
 
   // Builds a 16th-note grid for `bpm` that best fits the detected hits.
-  // Returns { stepSec, origin, stepOf(time) }: step 0 is the first beat that
-  // starts at or before the first hit, so bar 1 / beat 1 sits at `origin`.
-  function makeGrid(hits, bpm) {
+  // Returns { stepSec, origin, stepOf(time) } with bar 1 / beat 1 at `origin`.
+  // Without an anchor, step 0 is the first beat at or before the first hit.
+  // With an anchor (the time of a metronome downbeat in the recording), bars
+  // follow the metronome; the anchor only has to be roughly right, as the
+  // exact phase still comes from the hits (this absorbs audio latency).
+  function makeGrid(hits, bpm, anchor) {
     const s = 15 / bpm;
+    const hasAnchor = anchor != null && Number.isFinite(anchor);
     const times = hits.map((h) => h.time);
     if (!times.length) {
-      return { stepSec: s, origin: 0, stepOf: (t) => Math.round(t / s) };
+      const origin = hasAnchor ? anchor : 0;
+      return { stepSec: s, origin, stepOf: (t) => Math.round((t - origin) / s) };
     }
     const weights = hits.map((h) => BEAT_WEIGHT[h.label] || 1);
 
@@ -399,6 +469,23 @@
     const phase = Math.atan2(sn, c) / (2 * Math.PI) * s;
     const idx = times.map((t) => Math.round((t - phase) / s));
     const first = Math.min(...idx);
+    const onBeat = (b) => idx.reduce((sum, k, i) => sum + ((((k - b) % 4) + 4) % 4 === 0 ? weights[i] : 0), 0);
+
+    if (hasAnchor) {
+      // Grid step nearest the anchor; allow up to 2 steps of correction toward
+      // where the kicks and snares actually are (e.g. Bluetooth latency).
+      const k0 = Math.round((anchor - phase) / s);
+      const total = weights.reduce((a, b) => a + b, 0);
+      let down = k0, bestScore = -Infinity;
+      for (let c = -2; c <= 2; c++) {
+        const sc = onBeat(k0 + c) - 0.2 * Math.abs(c) * total;
+        if (sc > bestScore + 1e-9) { bestScore = sc; down = k0 + c; }
+      }
+      // Skip empty bars before the first hit.
+      const barStart = down + Math.floor((first - down) / 16) * 16;
+      const origin = phase + barStart * s;
+      return { stepSec: s, origin, stepOf: (t) => Math.round((t - origin) / s) };
+    }
 
     // Which 16th inside a beat is "on the beat": the one carrying most kick/snare weight.
     const pos = [0, 0, 0, 0];
