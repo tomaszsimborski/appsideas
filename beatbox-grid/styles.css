@@ -26,6 +26,8 @@ body {
 }
 
 .top { padding: 20px 24px 4px; }
+.back { display: inline-block; margin-bottom: 8px; color: var(--muted); text-decoration: none; font-size: 13px; }
+.back:hover { color: var(--text); }
 h1 { margin: 0; font-size: 22px; font-weight: 650; letter-spacing: .2px; }
 h1 span { color: var(--accent); }
 .hint { margin: 6px 0 0; color: var(--muted); }

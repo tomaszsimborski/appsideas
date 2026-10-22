@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tomkowe pomysły</title>
+  <meta name="description" content="Eksperymenty i małe produkty budowane krok po kroku.">
+  <link rel="stylesheet" href="home.css">
+</head>
+<body>
+  <header class="hero">
+    <p class="eyebrow">Laboratorium</p>
+    <h1>Tomkowe pomysły</h1>
+    <p class="lede">Eksperymenty i małe produkty budowane krok po kroku. Każdy kafel to osobne narzędzie, które możesz od razu otworzyć.</p>
+  </header>
+
+  <main>
+    <ul id="ideas" class="ideas"></ul>
+    <noscript><p class="lede">Ta strona potrzebuje włączonego JavaScriptu.</p></noscript>
+  </main>
+
+  <footer class="foot">
+    <a href="https://github.com/tomaszsimborski/appsideas">Kod na GitHubie</a>
+  </footer>
+
+  <script src="ideas.js"></script>
+  <script>
+    (() => {
+      const list = document.getElementById('ideas');
+      const el = (tag, cls, text) => {
+        const e = document.createElement(tag);
+        if (cls) e.className = cls;
+        if (text != null) e.textContent = text;
+        return e;
+      };
+
+      for (const idea of window.IDEAS || []) {
+        const li = el('li');
+        const a = el('a', 'tile');
+        a.href = idea.href;
+
+        const shot = el('div', 'shot');
+        const img = el('img');
+        img.src = idea.preview;
+        img.alt = '';
+        img.loading = 'lazy';
+        shot.append(img);
+
+        const body = el('div', 'body');
+        const head = el('div', 'head');
+        head.append(el('h2', null, idea.title));
+        if (idea.date) head.append(el('span', 'date', idea.date));
+        body.append(head, el('p', 'desc', idea.description));
+
+        const foot = el('div', 'meta');
+        const tags = el('div', 'tags');
+        for (const t of idea.tags || []) tags.append(el('span', 'tag', t));
+        foot.append(tags, el('span', 'open', 'Otwórz →'));
+        body.append(foot);
+
+        a.append(shot, body);
+        li.append(a);
+        list.append(li);
+      }
+
+      // Miejsce na kolejny pomysł.
+      const next = el('li');
+      const ph = el('div', 'tile placeholder');
+      ph.append(el('span', 'plus', '+'), el('p', null, 'Następny pomysł już wkrótce'));
+      next.append(ph);
+      list.append(next);
+    })();
+  </script>
+</body>
+</html>
