@@ -35,7 +35,14 @@
   }
   function saveSettings() {
     const hiddenVenues = [...$('venues').querySelectorAll('input')].filter((c) => !c.checked).map((c) => c.value);
-    const settings = { start: +$('start').value, hours: +$('hours').value, hiddenVenues, onlyFree: $('onlyFree').checked };
+    const settings = {
+      start: +$('start').value,
+      hours: +$('hours').value,
+      hiddenVenues,
+      onlyFree: $('onlyFree').checked,
+      needDrums: $('needDrums').checked,
+      needKeys: $('needKeys').checked,
+    };
     try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) { /* private mode */ }
   }
 
@@ -47,6 +54,8 @@
     $('start').value = settings.start != null ? settings.start : 19;
     $('hours').value = settings.hours || 3;
     $('onlyFree').checked = !!settings.onlyFree;
+    $('needDrums').checked = !!settings.needDrums;
+    $('needKeys').checked = !!settings.needKeys;
 
     const today = A.warsawDay(Date.now());
     $('day').value = new URLSearchParams(location.search).get('day') || today;
@@ -90,12 +99,25 @@
     const dayTo = A.warsawTime(day, 24);
     const shown = new Set([...$('venues').querySelectorAll('input:checked')].map((c) => c.value));
     const onlyFree = $('onlyFree').checked;
+    const needDrums = $('needDrums').checked;
+    const needKeys = $('needKeys').checked;
+    // Keys for hire ('extra') do not count: the filter means "already there".
+    const equipped = (r) => {
+      const info = (window.ROOM_INFO || {})[r.room.id] || {};
+      return (!needDrums || info.drums === true) && (!needKeys || info.keys === true);
+    };
 
-    const groups = A.checkRooms(data, start, end, dayFrom, dayTo).filter((g) => shown.has(g.venue.id));
+    const groups = A.checkRooms(data, start, end, dayFrom, dayTo)
+      .filter((g) => shown.has(g.venue.id))
+      .map((g) => ({ ...g, rooms: g.rooms.filter(equipped) }));
     const all = groups.flatMap((g) => g.rooms);
     const free = all.filter((r) => r.free).length;
 
-    let note = `${formatDay(day)}, ${range(start, end)}: wolne ${free} z ${all.length} sal.`;
+    let note = `${formatDay(day)}, ${range(start, end)}: wolne ${free} z ${all.length} sal`;
+    if (needDrums || needKeys) {
+      note += ' z ' + [needDrums && 'perkusją', needKeys && 'klawiszami'].filter(Boolean).join(' i ');
+    }
+    note += '.';
     if (start < Date.now()) note += ' Ten termin już się zaczął.';
     setStatus(note, free ? 'ok' : 'warn');
 

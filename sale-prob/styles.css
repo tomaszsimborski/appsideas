@@ -41,7 +41,7 @@ main { padding-top: 12px; padding-bottom: 16px; display: grid; gap: 14px; }
 
 .controls { display: flex; flex-wrap: wrap; gap: 14px 18px; align-items: flex-end; }
 .field { display: grid; gap: 5px; color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: .03em; }
-.field input, .field select {
+.field input:not([type="checkbox"]), .field select {
   height: 38px;
   padding: 0 10px;
   background: var(--panel-2);
@@ -52,7 +52,7 @@ main { padding-top: 12px; padding-bottom: 16px; display: grid; gap: 14px; }
   font-size: 15px;
   color-scheme: dark;
 }
-.field input:focus, .field select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.field input:not([type="checkbox"]):focus, .field select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 .venues { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip, .check {
