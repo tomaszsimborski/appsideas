@@ -10,6 +10,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { warsawTime, warsawDay, formatTime, HOUR } = require('./availability.js');
 
 const DAYS_AHEAD = 28;
 const USER_AGENT = 'appsideas-sale-prob (+https://github.com/tomaszsimborski/appsideas)';
@@ -21,6 +22,13 @@ const DZWIEKOWA_BAND_TYPE = 'type-4'; // "Zespół (dwie i więcej osób)"
 const PLUGANDPLAY_API = 'https://pp.blackfernsoft.com';
 // Prices are not in the Plug&Play API, only on www.sala-prob.pl.
 const PLUGANDPLAY_PRICES = { 1: 50, 2: 50, A: 40, B: 50 };
+
+// Próbówka books through nakiedy.pl, which has no API: it lists the free
+// start times (every 30 min) of the chosen service, about 6 days per page.
+const PROBOWKA_URL = 'https://probowka.nakiedy.pl';
+const PROBOWKA_ADDRESS = 'ul. Robotnicza 1A/15';
+const PROBOWKA_PROMO = ' (25 zł/h pn–pt 6–15)';
+const SLOT = HOUR / 2;
 
 // "YYYY-MM-DD" of today in Poland, and simple day arithmetic on such strings.
 const todayInWarsaw = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Warsaw' });
@@ -108,6 +116,96 @@ async function fetchPlugAndPlay(from, to) {
   };
 }
 
+async function getText(url, options = {}) {
+  const res = await fetch(url, { ...options, headers: { 'User-Agent': USER_AGENT, ...options.headers } });
+  if (!res.ok && res.status !== 302) throw new Error(`${res.status} ${url}`);
+  return { res, text: await res.text() };
+}
+
+// One room per <h2> on the start page; its plain one-hour service (not the
+// weekday-morning promo, whose name has " - ") is what we look up.
+function probowkaRooms(html) {
+  return html.split('<h2>').slice(1).map((section) => {
+    const name = section.slice(0, section.indexOf('</h2>')).split('[')[0].trim();
+    for (const row of section.split('class="flex-row"').slice(1)) {
+      const label = (row.match(/class="flex-cell name">([^<]*)</) || [])[1] || '';
+      const id = (row.match(/data-id="(\d+)"/) || [])[1];
+      const price = (row.match(/class="flex-cell price">\s*(\d+)/) || [])[1];
+      if (id && /\b60 min\b/.test(row) && !label.includes(' - ')) return { name, id, price };
+    }
+    return null;
+  }).filter(Boolean);
+}
+
+async function fetchProbowka(from, to) {
+  const { text: start } = await getText(PROBOWKA_URL + '/');
+  const rooms = probowkaRooms(start);
+  if (!rooms.length) throw new Error('no rooms found on ' + PROBOWKA_URL);
+
+  const result = [];
+  for (const room of rooms) {
+    // Picking the service is stored in the session, then results.html pages
+    // through the days after `last_date`.
+    const { res } = await getText(PROBOWKA_URL + '/', {
+      method: 'POST',
+      redirect: 'manual',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'service=' + room.id,
+    });
+    const cookie = res.headers.getSetCookie().map((c) => c.split(';')[0]).join('; ');
+
+    const starts = new Set();
+    const days = new Set();
+    let lastDate = addDays(from, -1);
+    for (let page = 0; page < 10 && lastDate < to; page++) {
+      const q = new URLSearchParams({ staff: 0, last_date: lastDate, reload: 1 });
+      const { text } = await getText(`${PROBOWKA_URL}/results.html?${q}`, { headers: { Cookie: cookie } });
+      const pageDays = [...text.matchAll(/data-date="(\d{4}-\d\d-\d\d)"/g)].map((m) => m[1]);
+      if (!pageDays.length || pageDays[pageDays.length - 1] <= lastDate) break;
+      pageDays.forEach((d) => days.add(d));
+      for (const [, time] of text.matchAll(/data-time="(\d{4}-\d\d-\d\d \d\d:\d\d)"/g)) starts.add(time);
+      lastDate = pageDays[pageDays.length - 1];
+    }
+
+    result.push({
+      id: 'probowka-' + room.id,
+      name: room.name,
+      address: PROBOWKA_ADDRESS,
+      price: room.price ? `${room.price} zł/h${PROBOWKA_PROMO}` : null,
+      busy: busyFromFreeStarts(starts, from, to, days),
+    });
+  }
+  return {
+    id: 'probowka',
+    name: 'Próbówka',
+    bookingUrl: PROBOWKA_URL + '/',
+    rooms: result,
+  };
+}
+
+// Turns "an hour can start at <local time>" into busy intervals: every
+// half-hour slot that no free hour covers is busy. Matching on local clock
+// time keeps the repeated hour on the night clocks go back free. Days the system did not list at all are
+// treated as fully booked; slots before the next hour are skipped, since
+// the system no longer offers them anyway.
+function busyFromFreeStarts(starts, from, to, days) {
+  const notBefore = Math.ceil((Date.now() + HOUR) / SLOT) * SLOT;
+  const busy = [];
+  for (let day = from; day < to; day = addDays(day, 1)) {
+    const end = warsawTime(day, 24);
+    for (let t = Math.max(warsawTime(day, 0), notBefore); t < end; t += SLOT) {
+      const free = days.has(day) && (starts.has(localTime(t)) || starts.has(localTime(t - SLOT)));
+      if (free) continue;
+      const last = busy[busy.length - 1];
+      if (last && last[1] === t) last[1] = t + SLOT;
+      else busy.push([t, t + SLOT]);
+    }
+  }
+  return busy;
+}
+
+const localTime = (ms) => `${warsawDay(ms)} ${formatTime(ms)}`;
+
 const sortIntervals = (list) => list.filter(([s, e]) => e > s).sort((a, b) => a[0] - b[0]);
 
 async function main() {
@@ -117,7 +215,8 @@ async function main() {
 
   const venues = [];
   const errors = [];
-  for (const [name, fn] of [['Dźwiękówa', fetchDzwiekowa], ['Plug&Play', fetchPlugAndPlay]]) {
+  const sources = [['Dźwiękówa', fetchDzwiekowa], ['Plug&Play', fetchPlugAndPlay], ['Próbówka', fetchProbowka]];
+  for (const [name, fn] of sources) {
     try {
       venues.push(await fn(from, to));
     } catch (err) {
