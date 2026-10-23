@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="400" viewBox="0 0 640 400" role="img" aria-label="Lista sal prób z paskami zajętości i zaznaczonym terminem 19:00–22:00">
+<rect width="640" height="400" fill="#16181d"/>
+<text x="40" y="52" fill="#e6e8ee" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="22" font-weight="700">Sobota, 19:00–22:00</text>
+<text x="40" y="78" fill="#4fd1a1" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="14" font-weight="600">wolne 3 z 5 sal</text>
+<text x="230.0" y="112" fill="#8a90a0" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="11" text-anchor="middle">08</text>
+<text x="322.5" y="112" fill="#8a90a0" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="11" text-anchor="middle">12</text>
+<text x="415.0" y="112" fill="#8a90a0" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="11" text-anchor="middle">16</text>
+<text x="507.5" y="112" fill="#8a90a0" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="11" text-anchor="middle">20</text>
+<text x="600.0" y="112" fill="#8a90a0" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="11" text-anchor="middle">00</text>
+<rect x="40" y="128" width="560" height="44" rx="8" fill="#1b1d23" stroke="#2e323c"/>
+<rect x="40" y="128" width="4" height="44" fill="#4fd1a1"/>
+<text x="58" y="155" fill="#e6e8ee" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="14" font-weight="650">Młyn</text>
+<rect x="230" y="143" width="370" height="14" rx="4" fill="#4fd1a1" fill-opacity=".16"/>
+<rect x="276.2" y="143" width="46.2" height="14" fill="#ff6b6b" fill-opacity=".75"/>
+<rect x="345.6" y="143" width="69.4" height="14" fill="#ff6b6b" fill-opacity=".75"/>
+<rect x="484.4" y="142" width="69.4" height="16" rx="4" fill="none" stroke="#e6e8ee" stroke-width="2"/>
+<rect x="40" y="180" width="560" height="44" rx="8" fill="#1b1d23" stroke="#2e323c"/>
+<rect x="40" y="180" width="4" height="44" fill="#4fd1a1"/>
+<text x="58" y="207" fill="#e6e8ee" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="14" font-weight="650">Tęczowa 57 sala B</text>
+<rect x="230" y="195" width="370" height="14" rx="4" fill="#4fd1a1" fill-opacity=".16"/>
+<rect x="484.4" y="194" width="69.4" height="16" rx="4" fill="none" stroke="#e6e8ee" stroke-width="2"/>
+<rect x="40" y="232" width="560" height="44" rx="8" fill="#1b1d23" stroke="#2e323c"/>
+<rect x="40" y="232" width="4" height="44" fill="#4fd1a1"/>
+<text x="58" y="259" fill="#e6e8ee" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="14" font-weight="650">Sala A</text>
+<rect x="230" y="247" width="370" height="14" rx="4" fill="#4fd1a1" fill-opacity=".16"/>
+<rect x="299.4" y="247" width="46.2" height="14" fill="#ff6b6b" fill-opacity=".75"/>
+<rect x="415.0" y="247" width="69.4" height="14" fill="#ff6b6b" fill-opacity=".75"/>
+<rect x="484.4" y="246" width="69.4" height="16" rx="4" fill="none" stroke="#e6e8ee" stroke-width="2"/>
+<rect x="40" y="284" width="560" height="44" rx="8" fill="#1b1d23" stroke="#2e323c"/>
+<rect x="40" y="284" width="4" height="44" fill="#ff6b6b"/>
+<text x="58" y="311" fill="#e6e8ee" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="14" font-weight="650">Browar</text>
+<rect x="230" y="299" width="370" height="14" rx="4" fill="#4fd1a1" fill-opacity=".16"/>
+<rect x="230.0" y="299" width="69.4" height="14" fill="#ff6b6b" fill-opacity=".75"/>
+<rect x="322.5" y="299" width="104.1" height="14" fill="#ff6b6b" fill-opacity=".75"/>
+<rect x="461.2" y="299" width="69.4" height="14" fill="#ff6b6b" fill-opacity=".75"/>
+<rect x="484.4" y="298" width="69.4" height="16" rx="4" fill="none" stroke="#e6e8ee" stroke-width="2"/>
+<rect x="40" y="336" width="560" height="44" rx="8" fill="#1b1d23" stroke="#2e323c"/>
+<rect x="40" y="336" width="4" height="44" fill="#ff6b6b"/>
+<text x="58" y="363" fill="#e6e8ee" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="14" font-weight="650">Sala 2</text>
+<rect x="230" y="351" width="370" height="14" rx="4" fill="#4fd1a1" fill-opacity=".16"/>
+<rect x="253.1" y="351" width="92.5" height="14" fill="#ff6b6b" fill-opacity=".75"/>
+<rect x="368.8" y="351" width="80.9" height="14" fill="#ff6b6b" fill-opacity=".75"/>
+<rect x="461.2" y="351" width="46.2" height="14" fill="#ff6b6b" fill-opacity=".75"/>
+<rect x="484.4" y="350" width="69.4" height="16" rx="4" fill="none" stroke="#e6e8ee" stroke-width="2"/>
+</svg>
