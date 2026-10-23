@@ -35,7 +35,14 @@
   }
   function saveSettings() {
     const hiddenVenues = [...$('venues').querySelectorAll('input')].filter((c) => !c.checked).map((c) => c.value);
-    const settings = { start: +$('start').value, hours: +$('hours').value, hiddenVenues, onlyFree: $('onlyFree').checked };
+    const settings = {
+      start: +$('start').value,
+      hours: +$('hours').value,
+      hiddenVenues,
+      onlyFree: $('onlyFree').checked,
+      needDrums: $('needDrums').checked,
+      needKeys: $('needKeys').checked,
+    };
     try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) { /* private mode */ }
   }
 
@@ -47,6 +54,8 @@
     $('start').value = settings.start != null ? settings.start : 19;
     $('hours').value = settings.hours || 3;
     $('onlyFree').checked = !!settings.onlyFree;
+    $('needDrums').checked = !!settings.needDrums;
+    $('needKeys').checked = !!settings.needKeys;
 
     const today = A.warsawDay(Date.now());
     $('day').value = new URLSearchParams(location.search).get('day') || today;
@@ -90,12 +99,25 @@
     const dayTo = A.warsawTime(day, 24);
     const shown = new Set([...$('venues').querySelectorAll('input:checked')].map((c) => c.value));
     const onlyFree = $('onlyFree').checked;
+    const needDrums = $('needDrums').checked;
+    const needKeys = $('needKeys').checked;
+    // Keys for hire ('extra') do not count: the filter means "already there".
+    const equipped = (r) => {
+      const info = (window.ROOM_INFO || {})[r.room.id] || {};
+      return (!needDrums || info.drums === true) && (!needKeys || info.keys === true);
+    };
 
-    const groups = A.checkRooms(data, start, end, dayFrom, dayTo).filter((g) => shown.has(g.venue.id));
+    const groups = A.checkRooms(data, start, end, dayFrom, dayTo)
+      .filter((g) => shown.has(g.venue.id))
+      .map((g) => ({ ...g, rooms: g.rooms.filter(equipped) }));
     const all = groups.flatMap((g) => g.rooms);
     const free = all.filter((r) => r.free).length;
 
-    let note = `${formatDay(day)}, ${range(start, end)}: wolne ${free} z ${all.length} sal.`;
+    let note = `${formatDay(day)}, ${range(start, end)}: wolne ${free} z ${all.length} sal`;
+    if (needDrums || needKeys) {
+      note += ' z ' + [needDrums && 'perkusją', needKeys && 'klawiszami'].filter(Boolean).join(' i ');
+    }
+    note += '.';
     if (start < Date.now()) note += ' Ten termin już się zaczął.';
     setStatus(note, free ? 'ok' : 'warn');
 
@@ -128,6 +150,8 @@
     head.append(el('h3', null, room.name), el('span', 'pill', result.free ? 'Wolna' : 'Zajęta'));
     card.append(head);
     card.append(el('p', 'meta', [room.address, room.price].filter(Boolean).join(' · ')));
+    const info = (window.ROOM_INFO || {})[room.id];
+    if (info) card.append(features(info));
     card.append(timeline(room.busy, view));
 
     if (!result.free) {
@@ -150,6 +174,20 @@
       }
     }
     return card;
+  }
+
+  // Size, drums and keys as small tags, plus the venue's note if any.
+  function features(info) {
+    const wrap = el('div', 'features');
+    const tag = (text, kind) => wrap.append(el('span', 'feature ' + kind, text));
+    tag(info.area ? `${info.area} m²` : 'metraż nieznany', info.area ? 'has' : 'unknown');
+    tag(info.drums ? 'perkusja' : 'bez perkusji', info.drums ? 'has' : 'no');
+    if (info.keys === 'extra') tag('klawisze za dopłatą', 'unknown');
+    else tag(info.keys ? 'klawisze' : 'bez klawiszy', info.keys ? 'has' : 'no');
+    if (!info.note) return wrap;
+    const box = el('div', 'box-note');
+    box.append(wrap, el('p', 'meta', info.note));
+    return box;
   }
 
   // Day strip: busy bookings in red, the chosen time as an outline.

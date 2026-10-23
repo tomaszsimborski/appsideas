@@ -10,7 +10,7 @@
   <header class="top">
     <a class="back" href="../index.html">← Tomkowe pomysły</a>
     <h1>Wolne sale prób <span>·</span> Wrocław</h1>
-    <p class="hint">Wybierz dzień i godziny, a sprawdzę grafiki <b>Dźwiękówy</b> i <b>Plug&amp;Play</b>.</p>
+    <p class="hint">Wybierz dzień i godziny, a sprawdzę grafiki <b>17 sal prób</b> z rezerwacją online w pięciu miejscach.</p>
   </header>
 
   <main>
@@ -27,7 +27,13 @@
       <div class="field">Gdzie
         <div id="venues" class="venues"></div>
       </div>
-      <label class="check"><input id="onlyFree" type="checkbox"> tylko wolne</label>
+      <div class="field">Pokaż
+        <div class="venues">
+          <label class="check"><input id="onlyFree" type="checkbox"> tylko wolne</label>
+          <label class="check"><input id="needDrums" type="checkbox"> z perkusją</label>
+          <label class="check"><input id="needKeys" type="checkbox"> z klawiszami</label>
+        </div>
+      </div>
     </form>
 
     <p id="status" class="status">Ładuję grafiki…</p>
@@ -40,6 +46,7 @@
   </footer>
 
   <script src="availability.js"></script>
+  <script src="rooms-info.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
