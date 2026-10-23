@@ -128,6 +128,8 @@
     head.append(el('h3', null, room.name), el('span', 'pill', result.free ? 'Wolna' : 'Zajęta'));
     card.append(head);
     card.append(el('p', 'meta', [room.address, room.price].filter(Boolean).join(' · ')));
+    const info = (window.ROOM_INFO || {})[room.id];
+    if (info) card.append(features(info));
     card.append(timeline(room.busy, view));
 
     if (!result.free) {
@@ -150,6 +152,20 @@
       }
     }
     return card;
+  }
+
+  // Size, drums and keys as small tags, plus the venue's note if any.
+  function features(info) {
+    const wrap = el('div', 'features');
+    const tag = (text, kind) => wrap.append(el('span', 'feature ' + kind, text));
+    tag(info.area ? `${info.area} m²` : 'metraż nieznany', info.area ? 'has' : 'unknown');
+    tag(info.drums ? 'perkusja' : 'bez perkusji', info.drums ? 'has' : 'no');
+    if (info.keys === 'extra') tag('klawisze za dopłatą', 'unknown');
+    else tag(info.keys ? 'klawisze' : 'bez klawiszy', info.keys ? 'has' : 'no');
+    if (!info.note) return wrap;
+    const box = el('div', 'box-note');
+    box.append(wrap, el('p', 'meta', info.note));
+    return box;
   }
 
   // Day strip: busy bookings in red, the chosen time as an outline.

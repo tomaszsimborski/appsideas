@@ -18,6 +18,11 @@ mają rezerwację online (według katalogu BookMySound, październik 2026):
 Przy zajętej sali widać, kiedy jest zajęta, i najbliższy wolny termin tej
 samej długości tego dnia. Kliknięcie go przestawia godzinę.
 
+Przy każdej sali jest też metraż i informacja, czy na miejscu jest perkusja i
+klawisze. Te dane są przepisane ręcznie ze stron sal w
+[`rooms-info.js`](rooms-info.js), więc gdy sala zmieni wyposażenie, trzeba
+je tam poprawić.
+
 ## Jak to działa
 
 Dźwiękówa i Plug&Play mają publiczne API z grafikiem, a Proste i Krzywe

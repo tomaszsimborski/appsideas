@@ -101,6 +101,12 @@ main { padding-top: 12px; padding-bottom: 16px; display: grid; gap: 14px; }
 .pill { padding: 2px 9px; border-radius: 99px; font-size: 12px; font-weight: 650; color: #0f1114; background: var(--busy); }
 .is-free .pill { background: var(--free); }
 .meta, .detail { margin: 0; color: var(--muted); font-size: 13px; }
+.box-note { display: grid; gap: 4px; }
+.features { display: flex; flex-wrap: wrap; gap: 5px; }
+.feature { padding: 1px 8px; border-radius: 6px; font-size: 12px; border: 1px solid var(--line); background: var(--panel-2); }
+.feature.has { color: var(--text); }
+.feature.no { color: var(--muted); border-style: dashed; }
+.feature.unknown { color: var(--muted); font-style: italic; }
 .detail { color: var(--text); }
 
 .link {
