@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wolne sale prób</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="top">
+    <a class="back" href="../index.html">← Tomkowe pomysły</a>
+    <h1>Wolne sale prób <span>·</span> Wrocław</h1>
+    <p class="hint">Wybierz dzień i godziny, a sprawdzę grafiki <b>Dźwiękówy</b> i <b>Plug&amp;Play</b>.</p>
+  </header>
+
+  <main>
+    <form id="form" class="panel controls" onsubmit="return false">
+      <label class="field">Dzień
+        <input id="day" type="date" required>
+      </label>
+      <label class="field">Od
+        <select id="start"></select>
+      </label>
+      <label class="field">Ile godzin
+        <select id="hours"></select>
+      </label>
+      <div class="field">Gdzie
+        <div id="venues" class="venues"></div>
+      </div>
+      <label class="check"><input id="onlyFree" type="checkbox"> tylko wolne</label>
+    </form>
+
+    <p id="status" class="status">Ładuję grafiki…</p>
+    <div id="results" class="results"></div>
+  </main>
+
+  <footer class="foot">
+    <p id="updated" class="muted"></p>
+    <p class="muted">Grafiki są pobierane automatycznie co ok. 30 minut, więc ktoś mógł zająć salę w międzyczasie. Przed próbą zarezerwuj ją w systemie sali.</p>
+  </footer>
+
+  <script src="availability.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
