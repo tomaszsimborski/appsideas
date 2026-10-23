@@ -3,6 +3,16 @@
 // plus jeden wpis poniżej.
 window.IDEAS = [
   {
+    title: 'Wolne sale prób',
+    description:
+      'Wybierz dzień i godziny próby, a strona sprawdzi grafiki Dźwiękówy i Plug&Play ' +
+      'i pokaże, które sale we Wrocławiu są wtedy wolne, a dla zajętych najbliższy wolny termin.',
+    href: 'sale-prob/index.html',
+    preview: 'sale-prob/preview.svg',
+    tags: ['Próby', 'Kalendarz', 'Wrocław'],
+    date: 'Październik 2026',
+  },
+  {
     title: 'Beatbox to Drum Grid',
     description:
       'Nagraj beatbox („tu”, „ta”, „ts”), a aplikacja rozpozna stopę, werbel i hi-hat ' +

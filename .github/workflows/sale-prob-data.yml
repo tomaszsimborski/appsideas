@@ -1,0 +1,42 @@
+# Downloads rehearsal-room schedules for sale-prob/ every ~30 minutes and
+# publishes them as availability.json on the sale-prob-data branch. The
+# branch is overwritten with a single commit each time, so it never grows.
+name: Sale prób – grafiki
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sale-prob-data
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Download schedules
+        run: node sale-prob/fetch-data.js out/availability.json
+
+      - name: Publish to the sale-prob-data branch
+        working-directory: out
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git init -q -b sale-prob-data
+          git add availability.json
+          git -c user.name='github-actions[bot]' \
+              -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+              commit -q -m "Grafiki sal prób $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push -q -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" sale-prob-data
