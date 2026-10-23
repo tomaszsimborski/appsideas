@@ -30,6 +30,12 @@ const PROBOWKA_ADDRESS = 'ul. Robotnicza 1A/15';
 const PROBOWKA_PROMO = ' (25 zł/h pn–pt 6–15)';
 const SLOT = HOUR / 2;
 
+// Melodyka books through asysto.pl: one room, with a separate one-hour
+// service for each price band (0–6, 6–15, 15–24). Each lists its free hours
+// week by week, so free time is the union of all bands.
+const MELODYKA_URL = 'https://saleprobmelodyka.asysto.pl';
+const MELODYKA_PRICE = '65 zł/h (50 zł/h w godz. 6–15, 45 zł/h w godz. 0–6)';
+
 // "YYYY-MM-DD" of today in Poland, and simple day arithmetic on such strings.
 const todayInWarsaw = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Warsaw' });
 const addDays = (day, n) => {
@@ -204,6 +210,55 @@ function busyFromFreeStarts(starts, from, to, days) {
   return busy;
 }
 
+async function fetchMelodyka(from, to) {
+  const { text: start } = await getText(MELODYKA_URL + '/wizyta/krok1');
+  // The first service in each band group for bands (not solo) is one hour.
+  const services = start.split('Rezerwacje od').slice(1)
+    .filter((group) => /^[^<]*Zespoły/.test(group))
+    .map((group) => (group.match(/krok3\/\/(\d+)/) || [])[1])
+    .filter(Boolean);
+  if (!services.length) throw new Error('no services found on ' + MELODYKA_URL);
+
+  const free = [];
+  for (const service of services) {
+    // krok3 redirects to the service's calendar (krok4/<service>/<resource>).
+    const { res } = await getText(`${MELODYKA_URL}/wizyta/krok3//${service}`);
+    for (let week = mondayOf(from); week < to; week = addDays(week, 7)) {
+      const { text } = await getText(`${res.url}?ajax=1&date=${week}`);
+      for (const [, s, e] of text.matchAll(/krok5\/\/\d+\/\d+\/(\d+)\.(\d+)/g)) free.push([s * 1000, e * 1000]);
+    }
+  }
+
+  return {
+    id: 'melodyka',
+    name: 'Melodyka',
+    bookingUrl: MELODYKA_URL + '/wizyta/krok1',
+    rooms: [{
+      id: 'melodyka-1',
+      name: 'Sala Melodyka',
+      address: 'ul. Fabryczna 10/D2, wejście 2',
+      price: MELODYKA_PRICE,
+      busy: busyFromFreeIntervals(free, from, to),
+    }],
+  };
+}
+
+const mondayOf = (day) => addDays(day, -((new Date(day + 'T00:00:00Z').getUTCDay() + 6) % 7));
+
+// Busy = everything in [from, to) that no free interval covers, from the
+// next full hour on (earlier slots are no longer offered anyway).
+function busyFromFreeIntervals(free, from, to) {
+  const end = warsawTime(to, 0);
+  let cursor = Math.max(warsawTime(from, 0), Math.ceil((Date.now() + HOUR) / HOUR) * HOUR);
+  const busy = [];
+  for (const [s, e] of free.slice().sort((a, b) => a[0] - b[0])) {
+    if (s > cursor && cursor < end) busy.push([cursor, Math.min(s, end)]);
+    cursor = Math.max(cursor, e);
+  }
+  if (cursor < end) busy.push([cursor, end]);
+  return busy;
+}
+
 const localTime = (ms) => `${warsawDay(ms)} ${formatTime(ms)}`;
 
 const sortIntervals = (list) => list.filter(([s, e]) => e > s).sort((a, b) => a[0] - b[0]);
@@ -215,7 +270,7 @@ async function main() {
 
   const venues = [];
   const errors = [];
-  const sources = [['Dźwiękówa', fetchDzwiekowa], ['Plug&Play', fetchPlugAndPlay], ['Próbówka', fetchProbowka]];
+  const sources = [['Dźwiękówa', fetchDzwiekowa], ['Plug&Play', fetchPlugAndPlay], ['Próbówka', fetchProbowka], ['Melodyka', fetchMelodyka]];
   for (const [name, fn] of sources) {
     try {
       venues.push(await fn(from, to));

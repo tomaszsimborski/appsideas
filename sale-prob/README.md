@@ -1,7 +1,7 @@
 # Wolne sale prób
 
 Wybierasz dzień, godzinę i długość próby, a strona pokazuje, które sale prób
-we Wrocławiu są wtedy wolne. Sprawdza trzy miejsca:
+we Wrocławiu są wtedy wolne. Sprawdza cztery miejsca:
 
 - **Dźwiękówa** (<https://dzwiekowa.pl/rezerwacja-online/>): Browar, Młyn,
   Bystrzycka 69, Tęczowa 57 sala A i B, Zaklęte Rewiry duża i mała.
@@ -9,15 +9,17 @@ we Wrocławiu są wtedy wolne. Sprawdza trzy miejsca:
   Sala A i B na ul. Fabrycznej.
 - **Próbówka Music House** (<https://probowka.nakiedy.pl/>): Sala A i B na
   ul. Robotniczej.
+- **Melodyka** (<https://saleprobmelodyka.pl/>): jedna sala na ul. Fabrycznej,
+  czynna całą dobę.
 
 Przy zajętej sali widać, kiedy jest zajęta, i najbliższy wolny termin tej
 samej długości tego dnia. Kliknięcie go przestawia godzinę.
 
 ## Jak to działa
 
-Dźwiękówa i Plug&Play mają publiczne API z grafikiem. Próbówka rezerwuje
-przez nakiedy.pl, który pokazuje tylko wolne godziny startu, więc skrypt
-odczytuje je ze strony rezerwacji i z nich wylicza zajęte godziny. Żaden z
+Dźwiękówa i Plug&Play mają publiczne API z grafikiem. Próbówka (nakiedy.pl)
+i Melodyka (asysto.pl) pokazują tylko wolne godziny, więc skrypt odczytuje je
+ze stron rezerwacji i z nich wylicza zajęte godziny. Żaden z
 tych systemów nie pozwala stronie z innej domeny pobierać danych, dlatego
 robi to GitHub Action:
 

@@ -5,7 +5,7 @@ window.IDEAS = [
   {
     title: 'Wolne sale prób',
     description:
-      'Wybierz dzień i godziny próby, a strona sprawdzi grafiki Dźwiękówy, Plug&Play i Próbówki ' +
+      'Wybierz dzień i godziny próby, a strona sprawdzi grafiki Dźwiękówy, Plug&Play, Próbówki i Melodyki ' +
       'i pokaże, które sale we Wrocławiu są wtedy wolne, a dla zajętych najbliższy wolny termin.',
     href: 'sale-prob/index.html',
     preview: 'sale-prob/preview.svg',
