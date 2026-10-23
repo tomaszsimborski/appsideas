@@ -36,6 +36,11 @@ const SLOT = HOUR / 2;
 const MELODYKA_URL = 'https://saleprobmelodyka.asysto.pl';
 const MELODYKA_PRICE = '65 zł/h (50 zł/h w godz. 6–15, 45 zł/h w godz. 0–6)';
 
+// Proste i Krzywe books through a Bookero widget: one service per room,
+// and a per-day list of hours where taken ones have no free slots.
+const BOOKERO_API = 'https://plugin.bookero.pl/plugin-api/v2';
+const PROSTEIKRZYWE_ID = 'XHsxgtZbFdQn';
+
 // "YYYY-MM-DD" of today in Poland, and simple day arithmetic on such strings.
 const todayInWarsaw = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Warsaw' });
 const addDays = (day, n) => {
@@ -189,11 +194,12 @@ async function fetchProbowka(from, to) {
   };
 }
 
-// Turns "an hour can start at <local time>" into busy intervals: every
-// half-hour slot that no free hour covers is busy. Matching on local clock
-// time keeps the repeated hour on the night clocks go back free. Days the system did not list at all are
-// treated as fully booked; slots before the next hour are skipped, since
-// the system no longer offers them anyway.
+// Turns "an hour can start at <local time>" (Próbówka, Proste i Krzywe)
+// into busy intervals: every half-hour slot that no free hour covers is
+// busy. Matching on local clock time keeps the repeated hour on the night
+// clocks go back free. Days the system did not list at all are treated as
+// fully booked; slots before the next hour are skipped, since the system
+// no longer offers them anyway.
 function busyFromFreeStarts(starts, from, to, days) {
   const notBefore = Math.ceil((Date.now() + HOUR) / SLOT) * SLOT;
   const busy = [];
@@ -243,6 +249,50 @@ async function fetchMelodyka(from, to) {
   };
 }
 
+async function fetchProsteIKrzywe(from, to) {
+  const base = { bookero_id: PROSTEIKRZYWE_ID, lang: 'pl' };
+  const init = await getJson(`${BOOKERO_API}/init?${new URLSearchParams({ ...base, periodicity_id: 0 })}`);
+
+  const rooms = [];
+  for (const service of init.services_list) {
+    const hour = (service.custom_durations || []).find((d) => d.duration === 60);
+    const starts = new Set();
+    const days = new Set();
+    for (let day = from; day < to; day = addDays(day, 1)) {
+      const q = new URLSearchParams({
+        ...base,
+        date: day,
+        service: service.id,
+        custom_duration_id: hour ? hour.id : '',
+        worker: 0,
+        people: 1,
+        periodicity_id: 0,
+        plugin_comment: JSON.stringify({ data: { parameters: {} } }),
+      });
+      const { data } = await getJson(`${BOOKERO_API}/getMonthDay?${q}`);
+      days.add(day);
+      for (const h of data.hours || []) {
+        if (h.valid === 1 && h.free_slots > 0) starts.add(`${day} ${h.hour}`);
+      }
+    }
+    // "RED ZONE - Rezerwacja jednorazowa" -> "Red Zone"
+    const name = service.name.split(' - ')[0].toLowerCase().replace(/\b\p{L}/gu, (c) => c.toUpperCase());
+    rooms.push({
+      id: 'prosteikrzywe-' + service.id,
+      name,
+      address: 'ul. Hubska 20',
+      price: hour && +hour.price ? `${+hour.price} zł/h` : null,
+      busy: busyFromFreeStarts(starts, from, to, days),
+    });
+  }
+  return {
+    id: 'prosteikrzywe',
+    name: 'Proste i Krzywe',
+    bookingUrl: 'https://prosteikrzywe.pl/rezerwacje/',
+    rooms,
+  };
+}
+
 const mondayOf = (day) => addDays(day, -((new Date(day + 'T00:00:00Z').getUTCDay() + 6) % 7));
 
 // Busy = everything in [from, to) that no free interval covers, from the
@@ -270,7 +320,13 @@ async function main() {
 
   const venues = [];
   const errors = [];
-  const sources = [['Dźwiękówa', fetchDzwiekowa], ['Plug&Play', fetchPlugAndPlay], ['Próbówka', fetchProbowka], ['Melodyka', fetchMelodyka]];
+  const sources = [
+    ['Dźwiękówa', fetchDzwiekowa],
+    ['Plug&Play', fetchPlugAndPlay],
+    ['Próbówka', fetchProbowka],
+    ['Melodyka', fetchMelodyka],
+    ['Proste i Krzywe', fetchProsteIKrzywe],
+  ];
   for (const [name, fn] of sources) {
     try {
       venues.push(await fn(from, to));

@@ -12,7 +12,7 @@ prosto z dysku.
 
 | Pomysł | Folder | Opis |
 |---|---|---|
-| Wolne sale prób | [`sale-prob/`](sale-prob/) | Sprawdza grafiki sal prób Dźwiękówy, Plug&Play, Próbówki i Melodyki we Wrocławiu i pokazuje, które są wolne w wybranym terminie. Dane pobiera GitHub Action co ~30 min. |
+| Wolne sale prób | [`sale-prob/`](sale-prob/) | Sprawdza grafiki 17 sal prób we Wrocławiu (Dźwiękówa, Plug&Play, Próbówka, Melodyka, Proste i Krzywe) i pokazuje, które są wolne w wybranym terminie. Dane pobiera GitHub Action co ~30 min. |
 | Beatbox to Drum Grid | [`beatbox-grid/`](beatbox-grid/) | Zamienia beatbox („tu” stopa, „ta” werbel, „ts” hi-hat) na siatkę perkusyjną, z metronomem i odliczaniem. |
 
 ## Jak dodać nowy pomysł

@@ -5,8 +5,8 @@ window.IDEAS = [
   {
     title: 'Wolne sale prób',
     description:
-      'Wybierz dzień i godziny próby, a strona sprawdzi grafiki Dźwiękówy, Plug&Play, Próbówki i Melodyki ' +
-      'i pokaże, które sale we Wrocławiu są wtedy wolne, a dla zajętych najbliższy wolny termin.',
+      'Wybierz dzień i godziny próby, a strona sprawdzi grafiki 17 sal prób we Wrocławiu ' +
+      '(Dźwiękówa, Plug&Play, Próbówka, Melodyka, Proste i Krzywe) i pokaże, które są wtedy wolne.',
     href: 'sale-prob/index.html',
     preview: 'sale-prob/preview.svg',
     tags: ['Próby', 'Kalendarz', 'Wrocław'],
