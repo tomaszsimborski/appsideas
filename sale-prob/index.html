@@ -37,12 +37,12 @@
     </form>
 
     <p id="status" class="status">Ładuję grafiki…</p>
+    <p id="updated" class="updated"></p>
     <div id="results" class="results"></div>
   </main>
 
   <footer class="foot">
-    <p id="updated" class="muted"></p>
-    <p class="muted">Grafiki są pobierane automatycznie co ok. 30 minut, więc ktoś mógł zająć salę w międzyczasie. Przed próbą zarezerwuj ją w systemie sali.</p>
+    <p class="muted">Grafiki nie odświeżają się same. Żeby pobrać aktualne, w GitHubie uruchom <a href="https://github.com/tomaszsimborski/appsideas/actions/workflows/sale-prob-data.yml">„Sale prób – grafiki”</a> (<b>Run workflow</b>) i po około minucie odśwież tę stronę. Ktoś mógł zająć salę od czasu pobrania, więc przed próbą zarezerwuj ją w systemie sali.</p>
   </footer>
 
   <script src="availability.js"></script>

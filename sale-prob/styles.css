@@ -129,6 +129,9 @@ main { padding-top: 12px; padding-bottom: 16px; display: grid; gap: 14px; }
 .ticks span:first-child { transform: none; }
 .ticks span:last-child { transform: translateX(-100%); }
 
+.updated { margin: -6px 0 0; color: var(--muted); font-size: 13px; }
+.updated.stale { color: var(--warn); }
+.updated a, .foot a { color: var(--accent); }
 .foot { padding-bottom: 32px; }
 .foot p { margin: 0 0 6px; font-size: 12px; }
 .muted { color: var(--muted); }
