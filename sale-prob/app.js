@@ -13,7 +13,8 @@
   // systems themselves. ?data=<url> overrides it for local testing.
   const DATA_URL = new URLSearchParams(location.search).get('data') ||
     'https://raw.githubusercontent.com/tomaszsimborski/appsideas/sale-prob-data/availability.json';
-  const STALE_AFTER = 3 * HOUR;
+  const STALE_AFTER = 6 * HOUR;
+  const REFRESH_URL = 'https://github.com/tomaszsimborski/appsideas/actions/workflows/sale-prob-data.yml';
   const TIMELINE_FROM = 8; // first hour drawn on the day timeline
   const SETTINGS_KEY = 'sale-prob-settings';
 
@@ -233,10 +234,17 @@
     const when = new Date(at).toLocaleString('pl-PL', {
       timeZone: 'Europe/Warsaw', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit',
     });
+    const stale = Date.now() - at > STALE_AFTER;
     let text = `Grafiki pobrane ${when}.`;
-    if (Date.now() - at > STALE_AFTER) text += ' To dość dawno, więc wyniki mogą być nieaktualne.';
+    if (stale) text += ' To dość dawno, więc wyniki mogą być nieaktualne.';
     for (const err of data.errors || []) text += ' ' + err + '.';
-    $('updated').textContent = text;
+    const link = el('a', null, 'Odśwież grafiki →');
+    link.href = REFRESH_URL;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    $('updated').textContent = text + ' ';
+    $('updated').append(link);
+    $('updated').classList.toggle('stale', stale);
   }
 
   // --- Start ---

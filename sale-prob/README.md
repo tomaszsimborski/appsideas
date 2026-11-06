@@ -30,23 +30,22 @@ Dźwiękówa i Plug&Play mają publiczne API z grafikiem, a Proste i Krzywe
 Próbówka (nakiedy.pl) i Melodyka (asysto.pl) pokazują tylko wolne godziny,
 więc skrypt odczytuje je ze stron rezerwacji i z nich wylicza zajęte. Żaden z
 tych systemów nie pozwala stronie z innej domeny pobierać danych, dlatego
-robi to GitHub Action:
+robi to GitHub Action, uruchamiany ręcznie:
 
 1. [`.github/workflows/sale-prob-data.yml`](../.github/workflows/sale-prob-data.yml)
-   co ok. 30 minut uruchamia [`fetch-data.js`](fetch-data.js).
+   uruchamia [`fetch-data.js`](fetch-data.js), gdy w zakładce **Actions**
+   wybierzesz „Sale prób – grafiki” i klikniesz **Run workflow**. Strona
+   apki ma link „Odśwież grafiki”, który prowadzi prosto tam.
 2. Skrypt pobiera zajęte terminy na 4 tygodnie do przodu i zapisuje je jako
    `availability.json` na gałęzi `sale-prob-data` (zawsze jeden commit, więc
    repo nie puchnie).
 3. Strona czyta ten plik z `raw.githubusercontent.com` i porównuje rezerwacje z
    wybranym terminem ([`availability.js`](availability.js)).
 
-Dane mogą być sprzed pół godziny albo trochę starsze, bo GitHub czasem
-opóźnia zaplanowane uruchomienia. Godzinę pobrania widać na dole strony.
-Przed próbą zawsze zarezerwuj salę w jej systemie.
-
-Uwaga: zaplanowane uruchomienia działają tylko z domyślnej gałęzi (`Main`), a
-GitHub je wyłącza, jeśli w repo przez 60 dni nic się nie dzieje. Wtedy włącz
-je z powrotem w zakładce **Actions**.
+Grafiki nie odświeżają się same, więc są aktualne na chwilę ostatniego
+uruchomienia. Godzinę pobrania widać pod podsumowaniem, a gdy minęło więcej
+niż 6 godzin, robi się żółta. Przed próbą zawsze zarezerwuj salę w jej
+systemie. Pobrane dane sięgają 4 tygodnie od dnia pobrania.
 
 ## Lokalnie
 

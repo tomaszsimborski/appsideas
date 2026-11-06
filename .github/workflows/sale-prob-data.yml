@@ -1,11 +1,10 @@
-# Downloads rehearsal-room schedules for sale-prob/ every ~30 minutes and
-# publishes them as availability.json on the sale-prob-data branch. The
-# branch is overwritten with a single commit each time, so it never grows.
+# Downloads rehearsal-room schedules for sale-prob/ and publishes them as
+# availability.json on the sale-prob-data branch. Runs only when started by
+# hand (Actions -> "Sale prób – grafiki" -> Run workflow). The branch is
+# overwritten with a single commit each time, so it never grows.
 name: Sale prób – grafiki
 
 on:
-  schedule:
-    - cron: '*/30 * * * *'
   workflow_dispatch:
 
 permissions:
