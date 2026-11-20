@@ -3,6 +3,16 @@
 // plus jeden wpis poniżej.
 window.IDEAS = [
   {
+    title: 'Licznik zdrowia Hero Realms',
+    description:
+      'Licznik punktów życia dla dwóch graczy jak w Authority: ekran dzielony na pół, ' +
+      'miecz zadaje obrażenia, serce leczy. Startowe zdrowie, imiona, miejsca i kolory do wyboru.',
+    href: 'hero-life/index.html',
+    preview: 'hero-life/preview.svg',
+    tags: ['Gry planszowe', 'Licznik', 'Telefon'],
+    date: 'Listopad 2026',
+  },
+  {
     title: 'Wolne sale prób',
     description:
       'Wybierz dzień i godziny próby, a strona sprawdzi grafiki 17 sal prób we Wrocławiu ' +
