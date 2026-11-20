@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#0f0b08">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Licznik zdrowia — Hero Realms</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Cinzel+Decorative:wght@700&display=swap">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Ekran pojedynku: dwie połówki, układ zależy od orientacji ekranu -->
+  <div id="game" class="game facing" hidden>
+    <section class="half" data-slot="0"></section>
+    <section class="half" data-slot="1"></section>
+
+    <nav class="bar" aria-label="Sterowanie pojedynkiem">
+      <button id="undoBtn" class="round" title="Cofnij ostatnią zmianę" aria-label="Cofnij">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
+      </button>
+      <button id="setupBtn" class="round big" title="Nowy pojedynek / ustawienia" aria-label="Ustawienia">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+      <button id="resetBtn" class="round" title="Zacznij od nowa (dotknij dwa razy)" aria-label="Zacznij od nowa">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Ustawienia przed pojedynkiem -->
+  <div id="setup" class="setup">
+    <div class="sheet">
+      <a class="back" href="../index.html">← Tomkowe pomysły</a>
+      <header class="title">
+        <p class="eyebrow">Licznik zdrowia</p>
+        <h1>Hero&nbsp;Realms</h1>
+        <div class="flourish" aria-hidden="true"><span></span><i></i><span></span></div>
+      </header>
+
+      <section class="card">
+        <h2>Startowe zdrowie</h2>
+        <div class="hp-pick">
+          <button type="button" class="step" data-step="-5" aria-label="Mniej o 5">−5</button>
+          <div class="hp-input">
+            <svg class="ico heal" viewBox="0 0 64 64" aria-hidden="true"><use href="#i-heart"/></svg>
+            <input id="startHp" type="number" inputmode="numeric" min="1" max="999" value="50" aria-label="Startowe zdrowie">
+          </div>
+          <button type="button" class="step" data-step="5" aria-label="Więcej o 5">+5</button>
+        </div>
+        <div class="chips" id="hpChips">
+          <button type="button" data-hp="40">40</button>
+          <button type="button" data-hp="50">50</button>
+          <button type="button" data-hp="60">60</button>
+          <button type="button" data-hp="75">75</button>
+          <button type="button" data-hp="100">100</button>
+        </div>
+      </section>
+
+      <div id="playerCards" class="players"></div>
+
+      <section class="card">
+        <h2>Ułożenie przy stole</h2>
+        <div class="seg" id="layoutSeg" role="radiogroup" aria-label="Ułożenie przy stole">
+          <button type="button" data-layout="facing" role="radio">Naprzeciw siebie</button>
+          <button type="button" data-layout="side" role="radio">Obok siebie</button>
+        </div>
+        <p class="hint">Pionowo ekran dzieli się na górę i dół, poziomo na lewo i prawo.
+          W pionie gracz z lewej jest na górze (jak po obróceniu telefonu w prawo).
+          „Naprzeciw siebie” obraca liczby w stronę każdego gracza.
+          W trakcie gry przycisk ⟳ w rogu połówki obraca licznik gracza o 90°.</p>
+      </section>
+
+      <div class="actions">
+        <button id="cancelBtn" type="button" class="ghost" hidden>Wróć do gry</button>
+        <button id="startBtn" type="button" class="primary">Do walki!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ikony (własne rysunki w duchu kart: miecz = obrażenia, serce = leczenie) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-sword" viewBox="0 0 64 64">
+        <g transform="rotate(45 32 32)">
+          <path d="M32 1 L37.5 9 L37.5 41 L26.5 41 L26.5 9 Z"/>
+          <rect x="17" y="40" width="30" height="6" rx="3"/>
+          <rect x="28.5" y="45" width="7" height="12" rx="2"/>
+          <circle cx="32" cy="59.5" r="4"/>
+        </g>
+      </symbol>
+      <symbol id="i-heart" viewBox="0 0 64 64">
+        <path d="M32 58 C11 43 4 31 4 21 C4 11.5 11.5 5 20 5 C25.5 5 29.5 8 32 12.5 C34.5 8 38.5 5 44 5 C52.5 5 60 11.5 60 21 C60 31 53 43 32 58 Z"/>
+      </symbol>
+    </defs>
+  </svg>
+
+  <template id="halfTpl">
+    <div class="inner">
+      <div class="frame" aria-hidden="true"></div>
+      <button type="button" class="turn" title="Obróć licznik o 90°" aria-label="Obróć licznik o 90 stopni">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+      </button>
+      <div class="name"></div>
+      <div class="main">
+        <button type="button" class="act dmg" aria-label="Obrażenia −1">
+          <span class="medal"><svg viewBox="0 0 64 64"><use href="#i-sword"/></svg></span>
+          <span class="sign">−</span>
+        </button>
+        <div class="hp">
+          <span class="delta"></span>
+          <span class="value">50</span>
+          <span class="log"></span>
+        </div>
+        <button type="button" class="act heal" aria-label="Leczenie +1">
+          <span class="medal"><svg viewBox="0 0 64 64"><use href="#i-heart"/></svg></span>
+          <span class="sign">+</span>
+        </button>
+      </div>
+      <div class="result" hidden>
+        <div class="result-title"></div>
+        <div class="result-sub"></div>
+        <button type="button" class="rematch">Rewanż</button>
+      </div>
+    </div>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>

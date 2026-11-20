@@ -12,6 +12,7 @@ prosto z dysku.
 
 | Pomysł | Folder | Opis |
 |---|---|---|
+| Licznik zdrowia Hero Realms | [`hero-life/`](hero-life/) | Licznik punktów życia dla dwóch graczy w stylu Authority, w barwach Hero Realms: ekran dzielony na pół, miecz (obrażenia) i serce (leczenie), wybór startowego zdrowia, imion, miejsc i kolorów, ekran zwycięzcy. |
 | Wolne sale prób | [`sale-prob/`](sale-prob/) | Sprawdza grafiki 17 sal prób we Wrocławiu (Dźwiękówa, Plug&Play, Próbówka, Melodyka, Proste i Krzywe) i pokazuje, które są wolne w wybranym terminie. Grafiki pobiera GitHub Action uruchamiany ręcznie. |
 | Beatbox to Drum Grid | [`beatbox-grid/`](beatbox-grid/) | Zamienia beatbox („tu” stopa, „ta” werbel, „ts” hi-hat) na siatkę perkusyjną, z metronomem i odliczaniem. |
 
