@@ -14,6 +14,9 @@ budowania, bez serwera, bez zależności.
   trafiają do historii (ostatnie zmiany widać pod liczbą).
 - Gdy zdrowie spadnie do 0 lub niżej, każda połówka pokazuje swój wynik:
   **Zwycięstwo** albo **Porażka**, z przyciskiem **Rewanż**.
+- Przycisk **⟳** w rogu połówki obraca licznik danego gracza o 90°, żeby
+  dopasować go do miejsca, w którym siedzi. Obrót jest zapamiętywany; zmiana
+  ułożenia w ustawieniach go zeruje.
 - Pasek na środku: **cofnij** ostatnią zmianę (działa też po końcu gry),
   **ustawienia / nowy pojedynek**, **od nowa** (dotknij dwa razy).
 - Ekran nie gaśnie w trakcie gry (Wake Lock), a stan gry przetrwa

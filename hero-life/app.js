@@ -20,6 +20,7 @@
       { name: 'Tomek', color: 'guild', seat: 'left' },
       { name: 'Berenika', color: 'necros', seat: 'right' },
     ],
+    turns: [0, 0],   // dodatkowy obrót licznika każdego gracza, w ćwierćobrotach
   };
   const SETTINGS_KEY = 'heroLife.settings.v1';
   const GAME_KEY = 'heroLife.game.v1';
@@ -61,6 +62,9 @@
         if (COLORS.some((c) => c.id === p.color)) out.players[i].color = p.color;
         if (p.seat === 'left' || p.seat === 'right') out.players[i].seat = p.seat;
       });
+    }
+    if (Array.isArray(s.turns)) {
+      s.turns.slice(0, 2).forEach((t, i) => { if (Number.isInteger(t)) out.turns[i] = ((t % 4) + 4) % 4; });
     }
     if (out.players[0].seat === out.players[1].seat) {
       out.players[1].seat = out.players[0].seat === 'left' ? 'right' : 'left';
@@ -108,6 +112,7 @@
     bindHold($('.act.dmg', half), () => change(playerAt(slot), -1));
     bindHold($('.act.heal', half), () => change(playerAt(slot), +1));
     $('.rematch', half).addEventListener('click', rematch);
+    $('.turn', half).addEventListener('click', () => turn(playerAt(slot)));
     return p;
   });
 
@@ -210,6 +215,47 @@
     save();
     render();
   }
+
+  // ---------- Obrót liczników ----------
+
+  const landscape = matchMedia('(orientation: landscape)');
+
+  // Obrót wynikający z ułożenia: naprzeciw siebie liczby patrzą w stronę gracza.
+  function baseTurns(slot) {
+    if (settings.layout !== 'facing') return 0;
+    if (landscape.matches) return slot === 0 ? 1 : 3;   // lewy: 90°, prawy: 270°
+    return slot === 0 ? 2 : 0;                          // pion: górny do góry nogami
+  }
+
+  // Kąt trzymamy narastająco, żeby animacja zawsze kręciła w prawo.
+  const angle = [null, null];
+
+  function applyTurns(animate) {
+    for (const slot of [0, 1]) {
+      const i = playerAt(slot);
+      const q = (baseTurns(slot) + settings.turns[i]) % 4;
+      const half = parts[slot].half;
+      const inner = $('.inner', half);
+      let deg = q * 90;
+      if (animate && angle[slot] !== null) {
+        const prev = angle[slot];
+        deg = prev + ((deg - prev) % 360 + 360) % 360;
+      }
+      angle[slot] = deg;
+      inner.classList.toggle('anim', !!animate);
+      inner.style.transform = `translate(-50%, -50%) rotate(${deg}deg)`;
+      half.classList.toggle('sideways', q % 2 === 1);
+      half.dataset.turn = q;
+    }
+  }
+
+  function turn(i) {
+    settings.turns[i] = (settings.turns[i] + 1) % 4;
+    store.set(SETTINGS_KEY, settings);
+    applyTurns(true);
+  }
+
+  landscape.addEventListener('change', () => applyTurns(false));
 
   function save() {
     store.set(GAME_KEY, game);
@@ -324,6 +370,7 @@
     setupEl.hidden = true;
     gameEl.hidden = false;
     render();
+    applyTurns(false);
     keepAwake();
   }
 
@@ -422,7 +469,12 @@
     b.addEventListener('click', () => { hpInput.value = b.dataset.hp; renderDraft(); });
   }
   for (const b of document.querySelectorAll('#layoutSeg button')) {
-    b.addEventListener('click', () => { draft.layout = b.dataset.layout; renderDraft(); });
+    b.addEventListener('click', () => {
+      // Nowe ułożenie = liczniki znów patrzą prosto na graczy.
+      if (draft.layout !== b.dataset.layout) draft.turns = [0, 0];
+      draft.layout = b.dataset.layout;
+      renderDraft();
+    });
   }
 
   $('#cancelBtn').addEventListener('click', closeSetup);
@@ -452,6 +504,7 @@
     setupEl.hidden = true;
     gameEl.hidden = false;
     render();
+    applyTurns(false);
     keepAwake();
   } else {
     openSetup();
