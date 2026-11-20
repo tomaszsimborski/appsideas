@@ -34,3 +34,15 @@ budowania, bez serwera, bez zależności.
 
 Ustawienia zapisują się w przeglądarce i są podpowiadane przy następnym
 pojedynku.
+
+## Instalacja na telefonie (PWA)
+
+Otwórz <https://tomaszsimborski.github.io/appsideas/hero-life/> na telefonie:
+
+- **Android / Chrome:** w ustawieniach pojedynku pojawi się przycisk
+  **Zainstaluj aplikację** (albo menu ⋮ → „Zainstaluj aplikację”).
+- **iPhone / Safari:** Udostępnij → „Do ekranu początkowego”.
+
+Zainstalowany licznik otwiera się na pełnym ekranie i działa bez internetu.
+Po zmianie plików aplikacji podbij `VERSION` w `sw.js`, żeby telefony pobrały
+nową wersję.

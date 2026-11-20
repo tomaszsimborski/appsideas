@@ -498,6 +498,45 @@
     } catch { /* bez pełnego ekranu */ }
   });
 
+  // ---------- Instalacja (PWA) ----------
+
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+    navigator.serviceWorker.register('sw.js').catch(() => { /* bez trybu offline */ });
+  }
+
+  const installCard = $('#installCard');
+  const installBtn = $('#installBtn');
+  const installText = $('#installText');
+  const standalone = matchMedia('(display-mode: standalone)').matches
+    || matchMedia('(display-mode: fullscreen)').matches
+    || navigator.standalone === true;
+  let installPrompt = null;
+
+  if (!standalone) {
+    const ua = navigator.userAgent;
+    const ios = /iPhone|iPad|iPod/.test(ua) || (ua.includes('Macintosh') && navigator.maxTouchPoints > 1);
+    if (ios) {
+      // Safari na iOS nie ma przycisku instalacji — trzeba przez menu Udostępnij.
+      installText.textContent = 'W Safari dotknij „Udostępnij” (kwadrat ze strzałką), potem „Do ekranu początkowego”. Licznik otworzy się na pełnym ekranie i zadziała bez internetu.';
+      installCard.hidden = false;
+    }
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      installPrompt = e;
+      installBtn.hidden = false;
+      installCard.hidden = false;
+    });
+    installBtn.addEventListener('click', async () => {
+      if (!installPrompt) return;
+      installPrompt.prompt();
+      try { await installPrompt.userChoice; } catch { /* anulowano */ }
+      installPrompt = null;
+      installBtn.hidden = true;
+      installCard.hidden = true;
+    });
+    window.addEventListener('appinstalled', () => { installCard.hidden = true; });
+  }
+
   // ---------- Start ----------
 
   if (game) {

@@ -6,10 +6,11 @@ window.IDEAS = [
     title: 'Licznik zdrowia Hero Realms',
     description:
       'Licznik punktów życia dla dwóch graczy jak w Authority: ekran dzielony na pół, ' +
-      'miecz zadaje obrażenia, serce leczy. Startowe zdrowie, imiona, miejsca i kolory do wyboru.',
+      'miecz zadaje obrażenia, serce leczy. Startowe zdrowie, imiona, miejsca i kolory do wyboru. ' +
+      'Da się zainstalować na telefonie i działa bez internetu.',
     href: 'hero-life/index.html',
     preview: 'hero-life/preview.svg',
-    tags: ['Gry planszowe', 'Licznik', 'Telefon'],
+    tags: ['Gry planszowe', 'Licznik', 'PWA'],
     date: 'Listopad 2026',
   },
   {

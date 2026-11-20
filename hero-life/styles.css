@@ -644,3 +644,11 @@ button { font: inherit; color: inherit; cursor: pointer; }
   border: 1px solid rgba(214, 168, 76, .45);
   background: rgba(0, 0, 0, .3);
 }
+
+.install .hint { margin-top: 0; }
+.install-btn {
+  width: 100%;
+  margin-top: 12px;
+  height: 48px;
+  color: var(--gold-hi);
+}
