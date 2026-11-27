@@ -12,6 +12,7 @@ prosto z dysku.
 
 | Pomysł | Folder | Opis |
 |---|---|---|
+| Warsztat utworów | [`warsztat/`](warsztat/) | Centrum dowodzenia dla zespołu: utwory ze statusami (Motyw → Nagrane), docelowe tempo z metronomem, tekst / akordy / notatki, foldery z nagraniami z prób, riffami, inspiracjami ze Spotify i szkicami z DAW. Odtwarzacz pokazuje warstwy tekstowe, żeby śpiewać albo pisać do nagrania. |
 | Licznik zdrowia Hero Realms | [`hero-life/`](hero-life/) | Licznik punktów życia dla dwóch graczy w stylu Authority, w barwach Hero Realms: ekran dzielony na pół, miecz (obrażenia) i serce (leczenie), wybór startowego zdrowia, imion, miejsc i kolorów, ekran zwycięzcy. |
 | Wolne sale prób | [`sale-prob/`](sale-prob/) | Sprawdza grafiki 17 sal prób we Wrocławiu (Dźwiękówa, Plug&Play, Próbówka, Melodyka, Proste i Krzywe) i pokazuje, które są wolne w wybranym terminie. Grafiki pobiera GitHub Action uruchamiany ręcznie. |
 | Beatbox to Drum Grid | [`beatbox-grid/`](beatbox-grid/) | Zamienia beatbox („tu” stopa, „ta” werbel, „ts” hi-hat) na siatkę perkusyjną, z metronomem i odliczaniem. |
