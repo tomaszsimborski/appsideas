@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="400" viewBox="0 0 640 400" role="img" aria-label="Lista utworów ze statusami i odtwarzacz z tekstem piosenki">
+  <rect width="640" height="400" fill="#0b0b0d"/>
+  <g font-family="Inter, system-ui, sans-serif">
+    <!-- lewa kolumna: lista utworów -->
+    <text x="32" y="44" font-size="11" font-weight="600" letter-spacing="1.2" fill="#8d8d97">WARSZTAT</text>
+    <text x="32" y="76" font-size="28" font-weight="800" fill="#ededf0">Utwory</text>
+    <g font-size="11" font-weight="500">
+      <rect x="32" y="94" width="76" height="24" rx="12" fill="#ededf0"/><text x="70" y="110" text-anchor="middle" fill="#0b0b0d">Wszystkie</text>
+      <rect x="114" y="94" width="58" height="24" rx="12" fill="#141417"/><text x="143" y="110" text-anchor="middle" fill="#8d8d97">Motyw</text>
+      <rect x="178" y="94" width="66" height="24" rx="12" fill="#141417"/><text x="211" y="110" text-anchor="middle" fill="#8d8d97">Koncept</text>
+    </g>
+    <g>
+      <rect x="32" y="138" width="36" height="36" rx="9" fill="#1c1c21"/>
+      <g fill="#ff7a3d"><rect x="37" y="166" width="3.5" height="2.5" rx="1"/><rect x="42.5" y="166" width="3.5" height="2.5" rx="1"/><rect x="48" y="166" width="3.5" height="2.5" rx="1"/></g>
+      <g fill="#25252b"><rect x="53.5" y="166" width="3.5" height="2.5" rx="1"/><rect x="59" y="166" width="3.5" height="2.5" rx="1"/></g>
+      <text x="80" y="153" font-size="14" font-weight="600" fill="#ededf0">Ostatni pociąg</text>
+      <text x="80" y="170" font-size="11" fill="#a49cff">96 BPM <tspan fill="#8d8d97">· 3 nagrania</tspan></text>
+      <rect x="230" y="144" width="58" height="24" rx="12" fill="#1c1c21"/><text x="259" y="160" text-anchor="middle" font-size="11" fill="#ededf0">Forma</text>
+
+      <rect x="32" y="190" width="36" height="36" rx="9" fill="#1c1c21"/>
+      <g fill="#ff7a3d"><rect x="37" y="218" width="3.5" height="2.5" rx="1"/></g>
+      <text x="80" y="205" font-size="14" font-weight="600" fill="#ededf0">Szkic w D</text>
+      <text x="80" y="222" font-size="11" fill="#a49cff">132 BPM <tspan fill="#8d8d97">· 1 nagranie</tspan></text>
+      <rect x="230" y="196" width="58" height="24" rx="12" fill="#1c1c21"/><text x="259" y="212" text-anchor="middle" font-size="11" fill="#ededf0">Motyw</text>
+
+      <rect x="32" y="242" width="36" height="36" rx="9" fill="#1c1c21"/>
+      <g fill="#ff7a3d"><rect x="37" y="270" width="3.5" height="2.5" rx="1"/><rect x="42.5" y="270" width="3.5" height="2.5" rx="1"/><rect x="48" y="270" width="3.5" height="2.5" rx="1"/><rect x="53.5" y="270" width="3.5" height="2.5" rx="1"/><rect x="59" y="270" width="3.5" height="2.5" rx="1"/></g>
+      <text x="80" y="257" font-size="14" font-weight="600" fill="#ededf0">Mgła</text>
+      <text x="80" y="274" font-size="11" fill="#a49cff">78 BPM <tspan fill="#8d8d97">· 5 nagrań</tspan></text>
+      <rect x="216" y="248" width="72" height="24" rx="12" fill="rgba(255,122,61,.14)"/><text x="252" y="264" text-anchor="middle" font-size="11" fill="#ff7a3d">Zrobione</text>
+    </g>
+    <!-- foldery -->
+    <g font-size="11" fill="#ededf0">
+      <rect x="32" y="300" width="124" height="44" rx="10" fill="#141417"/><text x="44" y="326">Nagrania z prób</text>
+      <rect x="164" y="300" width="124" height="44" rx="10" fill="#141417"/><text x="176" y="326">Motywy i riffy</text>
+      <rect x="32" y="350" width="124" height="34" rx="10" fill="#141417"/><text x="44" y="371">Inspiracje</text>
+      <rect x="164" y="350" width="124" height="34" rx="10" fill="#141417"/><text x="176" y="371">Szkice z DAW</text>
+    </g>
+
+    <!-- prawa kolumna: odtwarzacz -->
+    <rect x="320" y="20" width="296" height="362" rx="18" fill="#141417"/>
+    <text x="468" y="46" text-anchor="middle" font-size="9" font-weight="600" letter-spacing="1" fill="#8d8d97">NAGRANIA Z PRÓB</text>
+    <text x="340" y="78" font-size="20" font-weight="800" fill="#ededf0">Ostatni pociąg</text>
+    <rect x="496" y="64" width="74" height="18" rx="9" fill="rgba(164,156,255,.14)"/><text x="533" y="77" text-anchor="middle" font-size="9.5" font-weight="600" fill="#a49cff">96 BPM · Forma</text>
+    <text x="340" y="96" font-size="11" fill="#8d8d97">Próba 21.11 — refren</text>
+    <g>
+      <g fill="#ff7a3d">
+        <rect x="340" y="120" width="3" height="16" rx="1.5"/><rect x="346" y="114" width="3" height="28" rx="1.5"/><rect x="352" y="122" width="3" height="12" rx="1.5"/><rect x="358" y="110" width="3" height="36" rx="1.5"/><rect x="364" y="118" width="3" height="20" rx="1.5"/><rect x="370" y="112" width="3" height="32" rx="1.5"/><rect x="376" y="121" width="3" height="14" rx="1.5"/><rect x="382" y="108" width="3" height="40" rx="1.5"/><rect x="388" y="116" width="3" height="24" rx="1.5"/><rect x="394" y="120" width="3" height="16" rx="1.5"/><rect x="400" y="112" width="3" height="32" rx="1.5"/><rect x="406" y="118" width="3" height="20" rx="1.5"/>
+      </g>
+      <g fill="#25252b">
+        <rect x="412" y="110" width="3" height="36" rx="1.5"/><rect x="418" y="120" width="3" height="16" rx="1.5"/><rect x="424" y="114" width="3" height="28" rx="1.5"/><rect x="430" y="108" width="3" height="40" rx="1.5"/><rect x="436" y="118" width="3" height="20" rx="1.5"/><rect x="442" y="122" width="3" height="12" rx="1.5"/><rect x="448" y="112" width="3" height="32" rx="1.5"/><rect x="454" y="116" width="3" height="24" rx="1.5"/><rect x="460" y="110" width="3" height="36" rx="1.5"/><rect x="466" y="120" width="3" height="16" rx="1.5"/><rect x="472" y="114" width="3" height="28" rx="1.5"/><rect x="478" y="118" width="3" height="20" rx="1.5"/><rect x="484" y="108" width="3" height="40" rx="1.5"/><rect x="490" y="121" width="3" height="14" rx="1.5"/><rect x="496" y="112" width="3" height="32" rx="1.5"/><rect x="502" y="116" width="3" height="24" rx="1.5"/><rect x="508" y="120" width="3" height="16" rx="1.5"/><rect x="514" y="110" width="3" height="36" rx="1.5"/><rect x="520" y="118" width="3" height="20" rx="1.5"/><rect x="526" y="114" width="3" height="28" rx="1.5"/><rect x="532" y="122" width="3" height="12" rx="1.5"/><rect x="538" y="112" width="3" height="32" rx="1.5"/><rect x="544" y="116" width="3" height="24" rx="1.5"/><rect x="550" y="120" width="3" height="16" rx="1.5"/><rect x="556" y="110" width="3" height="36" rx="1.5"/><rect x="562" y="118" width="3" height="20" rx="1.5"/><rect x="568" y="121" width="3" height="14" rx="1.5"/><rect x="574" y="114" width="3" height="28" rx="1.5"/><rect x="580" y="118" width="3" height="20" rx="1.5"/><rect x="586" y="122" width="3" height="12" rx="1.5"/><rect x="592" y="116" width="3" height="24" rx="1.5"/>
+      </g>
+    </g>
+    <circle cx="468" cy="182" r="22" fill="#ededf0"/>
+    <g fill="#0b0b0d"><rect x="460" y="173" width="5.5" height="18" rx="1.5"/><rect x="470.5" y="173" width="5.5" height="18" rx="1.5"/></g>
+    <rect x="340" y="216" width="256" height="28" rx="9" fill="#0b0b0d"/>
+    <rect x="343" y="219" width="84" height="22" rx="7" fill="#25252b"/>
+    <g font-size="11" font-weight="600" text-anchor="middle">
+      <text x="385" y="234" fill="#ededf0">Tekst</text><text x="468" y="234" fill="#8d8d97">Akordy</text><text x="553" y="234" fill="#8d8d97">Notatki</text>
+    </g>
+    <g font-size="12" fill="#ededf0">
+      <text x="342" y="270" fill="#8d8d97">[Refren]</text>
+      <text x="342" y="290">Ostatni pociąg, ostatni raz</text>
+      <text x="342" y="310">Trzymaj się mocno, zanim</text>
+      <text x="342" y="330">zgaśnie czas<tspan fill="#ff7a3d">|</tspan></text>
+    </g>
+  </g>
+</svg>

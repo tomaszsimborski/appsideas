@@ -3,6 +3,16 @@
 // plus jeden wpis poniżej.
 window.IDEAS = [
   {
+    title: 'Warsztat utworów',
+    description:
+      'Centrum dowodzenia dla zespołu: utwory ze statusami od motywu do nagrania, docelowe tempo, ' +
+      'tekst, akordy i notatki oraz nagrania z prób, riffy, inspiracje ze Spotify i szkice z DAW w jednym miejscu.',
+    href: 'warsztat/index.html',
+    preview: 'warsztat/preview.svg',
+    tags: ['Zespół', 'Audio', 'Teksty'],
+    date: 'Listopad 2026',
+  },
+  {
     title: 'Licznik zdrowia Hero Realms',
     description:
       'Licznik punktów życia dla dwóch graczy jak w Authority: ekran dzielony na pół, ' +
